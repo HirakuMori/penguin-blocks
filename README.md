@@ -1,20 +1,32 @@
 # Penguin Blocks
 
-A small browser-based falling-block puzzle game with a penguin theme.
+Browser game repository for hosting multiple mini games via GitHub Pages.
 
-The game is packaged as a single `index.html` file, so it can be served directly with GitHub Pages.
+## Repository Layout
+
+- `docs/`: GitHub Pages deployment root.
+  - `docs/index.html`: Top page with game list.
+  - `docs/games/<game-name>/`: Each playable game.
+- `design-docs/`: Non-deployed planning and game design documents.
 
 ## Play
 
-Open `index.html` in a browser, or publish the repository with GitHub Pages.
+After deploying GitHub Pages, open:
+
+- Top page: `/`
+- Penguin Blocks: `/games/penguin-blocks/`
 
 ## GitHub Pages
 
 1. Open the repository on GitHub.
 2. Go to **Settings** > **Pages**.
 3. Set **Build and deployment** to **Deploy from a branch**.
-4. Select the `main` branch and `/ (root)`.
+4. Select the `main` branch and `/docs`.
 5. Save the settings.
+
+## Game Design Docs
+
+- [21 or Curse MVP spec](design-docs/21-or-curse-spec.md)
 
 ## Intellectual Property Note
 
