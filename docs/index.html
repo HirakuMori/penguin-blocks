@@ -6,60 +6,151 @@
     <title>Penguin Blocks Games</title>
     <style>
       :root {
-        color-scheme: light dark;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family: "MS PGothic", "Osaka", "Hiragino Kaku Gothic ProN", sans-serif;
+        background: #008080;
+        color: #000;
       }
       body {
         margin: 0;
-        padding: 2rem 1.25rem;
-        max-width: 860px;
-        margin-inline: auto;
-        line-height: 1.6;
+        padding: 24px 12px 48px;
+      }
+      .wrapper {
+        max-width: 760px;
+        margin: 0 auto;
+        border: 4px double #000080;
+        background: #f5f5f5;
+        box-shadow: 6px 6px 0 #000080;
+      }
+      header {
+        background: linear-gradient(180deg, #000080, #0000b3);
+        color: #fff;
+        padding: 14px 18px;
+        border-bottom: 3px solid #ff0;
       }
       h1 {
-        margin-bottom: 0.25rem;
+        margin: 0;
+        font-size: 1.7rem;
+        letter-spacing: 0.04em;
+      }
+      .tagline {
+        margin: 8px 0 0;
+        font-size: 0.95rem;
+      }
+      .counter {
+        margin-top: 10px;
+        font-size: 0.8rem;
+        font-family: "Courier New", monospace;
+        color: #ff0;
+      }
+      main {
+        padding: 16px;
+      }
+      .notice {
+        margin: 0 0 12px;
+        padding: 6px 10px;
+        border: 1px solid #000;
+        background: #ffffe0;
+        font-size: 0.85rem;
       }
       .games {
-        list-style: none;
-        margin: 1.5rem 0;
-        padding: 0;
-        display: grid;
-        gap: 0.75rem;
+        width: 100%;
+        border-collapse: collapse;
+        border: 2px solid #000080;
+        background: #fff;
       }
-      .card {
-        border: 1px solid color-mix(in oklab, currentColor 30%, transparent);
-        border-radius: 12px;
-        padding: 1rem;
+      .games th,
+      .games td {
+        border: 1px solid #000080;
+        padding: 8px;
+        vertical-align: top;
+      }
+      .games th {
+        background: #c6d7ff;
+        text-align: left;
+        font-size: 0.85rem;
+      }
+      .games tbody tr:nth-child(odd) {
+        background: #eef3ff;
+      }
+      .games tbody tr:hover {
+        background: #ffffcc;
+      }
+      .num {
+        width: 48px;
+        text-align: center;
+        font-family: "Courier New", monospace;
       }
       a {
-        text-decoration: none;
-        font-weight: 600;
-      }
-      a:hover {
+        color: #0000ee;
         text-decoration: underline;
+        font-weight: 700;
       }
-      small {
-        opacity: 0.8;
+      a:visited {
+        color: #551a8b;
+      }
+      .desc {
+        color: #222;
+        font-size: 0.85rem;
+      }
+      footer {
+        margin-top: 16px;
+        padding: 10px 14px 14px;
+        border-top: 1px dashed #000080;
+        font-size: 0.75rem;
+        background: #e2e9ff;
+      }
+      .blink {
+        color: #d00;
+        font-weight: 700;
+        animation: blink 1s steps(2, start) infinite;
+      }
+      @keyframes blink {
+        to {
+          visibility: hidden;
+        }
       }
     </style>
   </head>
   <body>
-    <header>
-      <h1>Game List</h1>
-      <p>このリポジトリで公開しているブラウザゲーム一覧です。</p>
-    </header>
+    <div class="wrapper">
+      <header>
+        <h1>◆ Penguin Blocks Games ◆</h1>
+        <p class="tagline">このリポジトリで公開しているブラウザゲーム一覧です。</p>
+        <div class="counter">あなたは <strong>0001234</strong> 人目の来訪者です</div>
+      </header>
 
-    <main>
-      <ul class="games">
-        <li class="card">
-          <a href="./games/penguin-blocks/">Penguin Blocks</a>
-          <div><small>落ち物パズルゲーム（既存実装）</small></div>
-        </li>
-        <li class="card">
-          <a href="./games/21-or-curse/">21 or Curse (Prototype)</a>
-          <div><small>21を目指すカード判断ゲーム（MVP試作）</small></div>
-        </li>
-      </ul>
-    </main>
+      <main>
+        <p class="notice">
+          <span class="blink">NEW!</span>
+          気になるゲーム名をクリックして遊んでください。ご意見は脳内掲示板まで。
+        </p>
+
+        <table class="games" aria-label="ゲーム一覧">
+          <thead>
+            <tr>
+              <th class="num">No.</th>
+              <th>タイトル</th>
+              <th>内容</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="num">001</td>
+              <td><a href="./games/penguin-blocks/">Penguin Blocks</a></td>
+              <td class="desc">落ち物パズルゲーム（既存実装）</td>
+            </tr>
+            <tr>
+              <td class="num">002</td>
+              <td><a href="./games/21-or-curse/">21 or Curse (Prototype)</a></td>
+              <td class="desc">21を目指すカード判断ゲーム（MVP試作）</td>
+            </tr>
+          </tbody>
+        </table>
+      </main>
+
+      <footer>
+        Since 199X / Best viewed in 800x600 / JavaScript ON でお楽しみください
+      </footer>
+    </div>
   </body>
 </html>
