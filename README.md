@@ -16,6 +16,11 @@ Open `index.html` in a browser, or publish the repository with GitHub Pages.
 4. Select the `main` branch and `/ (root)`.
 5. Save the settings.
 
+
+## Game Design Docs
+
+- [21 or Curse MVP spec](docs/21-or-curse-spec.md)
+
 ## Intellectual Property Note
 
 This is an independent, non-commercial falling-block puzzle project. It is not affiliated with, endorsed by, or sponsored by The Tetris Company or any official Tetris product.
