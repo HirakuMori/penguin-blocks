@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>21 or Curse (Prototype)</title>
+    <style>
+      :root {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        background: #17171b;
+        color: #f5f5f5;
+      }
+      .app {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+      h1, h2, h3, p { margin: 0; }
+      .screen { display: none; gap: 12px; }
+      .screen.active { display: grid; }
+      .panel {
+        background: #24252b;
+        border: 1px solid #3b3d45;
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .hud {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .stat {
+        padding: 10px;
+        background: #1d1f25;
+        border-radius: 8px;
+      }
+      .label { font-size: 12px; opacity: 0.8; }
+      .value { font-size: 22px; font-weight: 700; }
+      .card-area {
+        min-height: 180px;
+        display: grid;
+        place-items: center;
+        text-align: center;
+      }
+      .card {
+        width: 180px;
+        height: 120px;
+        border: 2px dashed #8f93a2;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        font-size: 28px;
+        font-weight: 700;
+        background: #15161a;
+      }
+      .actions {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+      button {
+        appearance: none;
+        border: 0;
+        border-radius: 10px;
+        background: #4d79ff;
+        color: #fff;
+        padding: 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      button.secondary { background: #6a6f80; }
+      button.danger { background: #b84a5f; }
+      .log {
+        height: 120px;
+        overflow: auto;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+      ul { margin: 0; padding-left: 1rem; }
+      .small { font-size: 13px; opacity: 0.9; }
+      .swipe {
+        text-align: center;
+        border: 1px solid #444a5a;
+        border-radius: 10px;
+        padding: 8px;
+        font-size: 13px;
+      }
+      a { color: #8fb3ff; }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <section id="titleScreen" class="screen active">
+        <h1>21 or Curse (Prototype)</h1>
+        <p class="small">見た目は簡易。ルール検証用の試作版です。</p>
+        <div class="panel">
+          <h2>ルール要約</h2>
+          <ul class="small">
+            <li>カードを取る/捨てる/終了(Stand)を選択</li>
+            <li>21を超えたら即バーストでスコア0</li>
+            <li>Standか10ターン到達で終了、score=floor(total×倍率)</li>
+          </ul>
+        </div>
+        <button id="startBtn">Start</button>
+      </section>
+
+      <section id="playScreen" class="screen">
+        <div class="hud">
+          <div class="stat"><div class="label">TOTAL</div><div class="value" id="total">0</div></div>
+          <div class="stat"><div class="label">MULTIPLIER</div><div class="value" id="multiplier">x1.0</div></div>
+          <div class="stat"><div class="label">TURN</div><div class="value" id="turn">1 / 10</div></div>
+          <div class="stat"><div class="label">NEXT EFFECT</div><div class="value" id="effect">なし</div></div>
+        </div>
+
+        <div class="panel card-area" id="swipeTarget">
+          <div>
+            <div class="small" id="peek">先読み: なし</div>
+            <div class="card" id="openCard">--</div>
+          </div>
+        </div>
+
+        <div class="swipe">スワイプ: 右=Take / 左=Discard / 下=Stand</div>
+
+        <div class="actions">
+          <button id="takeBtn">Take</button>
+          <button id="discardBtn" class="secondary">Discard</button>
+          <button id="standBtn" class="danger">Stand</button>
+        </div>
+
+        <div class="panel log" id="log"></div>
+      </section>
+
+      <section id="resultScreen" class="screen">
+        <h2>Result</h2>
+        <div class="panel">
+          <p id="resultText"></p>
+          <p class="small" id="resultDetail"></p>
+        </div>
+        <button id="retryBtn">Retry</button>
+        <a href="../../index.html">ゲーム一覧へ戻る</a>
+      </section>
+    </div>
+
+    <script>
+      const MAX_TURNS = 10;
+
+      const state = {
+        deck: [],
+        turn: 1,
+        maxTurns: MAX_TURNS,
+        total: 0,
+        multiplier: 1.0,
+        nextCardModifier: 0,
+        peekNextCard: false,
+        isBurst: false,
+        isFinished: false,
+        finalScore: null,
+        currentCard: null,
+        peekedCard: null,
+      };
+
+      const el = {
+        title: document.getElementById("titleScreen"),
+        play: document.getElementById("playScreen"),
+        result: document.getElementById("resultScreen"),
+        total: document.getElementById("total"),
+        multiplier: document.getElementById("multiplier"),
+        turn: document.getElementById("turn"),
+        effect: document.getElementById("effect"),
+        openCard: document.getElementById("openCard"),
+        log: document.getElementById("log"),
+        resultText: document.getElementById("resultText"),
+        resultDetail: document.getElementById("resultDetail"),
+        peek: document.getElementById("peek"),
+      };
+
+      function show(screen) {
+        [el.title, el.play, el.result].forEach((s) => s.classList.remove("active"));
+        screen.classList.add("active");
+      }
+
+      function makeDeck() {
+        const suits = ["♠", "♥", "♦", "♣"];
+        const ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+        const deck = [];
+        for (const suit of suits) {
+          for (const rank of ranks) {
+            deck.push({ rank, suit });
+          }
+        }
+        for (let i = deck.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [deck[i], deck[j]] = [deck[j], deck[i]];
+        }
+        return deck;
+      }
+
+      function rankValue(rank) {
+        if (rank === "A") return 11;
+        if (["K", "Q", "J"].includes(rank)) return 10;
+        return Number(rank);
+      }
+
+      function cardLabel(card) {
+        return `${card.rank}${card.suit}`;
+      }
+
+      function drawCard() {
+        if (state.deck.length === 0) state.deck = makeDeck();
+        return state.deck.pop();
+      }
+
+      function addLog(text) {
+        const row = document.createElement("div");
+        row.textContent = `T${state.turn}: ${text}`;
+        el.log.prepend(row);
+      }
+
+      function effectText() {
+        const parts = [];
+        if (state.nextCardModifier > 0) parts.push("次カード +1");
+        if (state.peekNextCard) parts.push("次カード先読み");
+        if (parts.length === 0) return "なし";
+        return parts.join(" / ");
+      }
+
+      function beginTurn() {
+        if (state.peekNextCard) {
+          state.peekedCard = drawCard();
+          el.peek.textContent = `先読み: ${cardLabel(state.peekedCard)} (${rankValue(state.peekedCard.rank)})`;
+        } else {
+          state.peekedCard = null;
+          el.peek.textContent = "先読み: なし";
+        }
+
+        const rawCard = state.peekedCard || drawCard();
+        state.currentCard = rawCard;
+
+        const modified = rankValue(rawCard.rank) + state.nextCardModifier;
+        state.currentCard.apparentValue = modified;
+        state.nextCardModifier = 0;
+        state.peekNextCard = false;
+
+        el.openCard.textContent = `${cardLabel(rawCard)} (${modified})`;
+        renderHUD();
+      }
+
+      function endGame(reason) {
+        state.isFinished = true;
+        if (state.isBurst) {
+          state.finalScore = 0;
+        } else {
+          state.finalScore = Math.floor(state.total * state.multiplier);
+        }
+
+        el.resultText.textContent = `終了理由: ${reason}`;
+        el.resultDetail.textContent = `total=${state.total}, multiplier=x${state.multiplier.toFixed(1)}, score=${state.finalScore}`;
+        show(el.result);
+      }
+
+      function checkEndAfterAction() {
+        if (state.total > 21) {
+          state.isBurst = true;
+          endGame("Burst");
+          return true;
+        }
+
+        if (state.turn >= state.maxTurns) {
+          endGame("Max Turn");
+          return true;
+        }
+
+        state.turn += 1;
+        beginTurn();
+        return false;
+      }
+
+      function applyDiscardEffect(card) {
+        const base = rankValue(card.rank);
+        if (base >= 2 && base <= 5) {
+          state.nextCardModifier = 1;
+          addLog(`${cardLabel(card)}を捨てた → 次カード +1`);
+          return;
+        }
+
+        if (base >= 6 && base <= 9) {
+          state.multiplier = Math.min(2.0, state.multiplier + 0.2);
+          addLog(`${cardLabel(card)}を捨てた → 倍率 +0.2`);
+          return;
+        }
+
+        if (base === 10) {
+          state.peekNextCard = true;
+          addLog(`${cardLabel(card)}を捨てた → 次カード先読み`);
+          return;
+        }
+
+        state.total = Math.max(0, state.total - 3);
+        addLog(`${cardLabel(card)}を捨てた → total -3`);
+      }
+
+      function handleTake() {
+        if (state.isFinished) return;
+        state.total += state.currentCard.apparentValue;
+        addLog(`${cardLabel(state.currentCard)}を取った (+${state.currentCard.apparentValue})`);
+        renderHUD();
+        checkEndAfterAction();
+      }
+
+      function handleDiscard() {
+        if (state.isFinished) return;
+        applyDiscardEffect(state.currentCard);
+        renderHUD();
+        checkEndAfterAction();
+      }
+
+      function handleStand() {
+        if (state.isFinished) return;
+        addLog("Standを選択");
+        endGame("Stand");
+      }
+
+      function renderHUD() {
+        el.total.textContent = String(state.total);
+        el.multiplier.textContent = `x${state.multiplier.toFixed(1)}`;
+        el.turn.textContent = `${state.turn} / ${state.maxTurns}`;
+        el.effect.textContent = effectText();
+      }
+
+      function resetGame() {
+        state.deck = makeDeck();
+        state.turn = 1;
+        state.total = 0;
+        state.multiplier = 1.0;
+        state.nextCardModifier = 0;
+        state.peekNextCard = false;
+        state.isBurst = false;
+        state.isFinished = false;
+        state.finalScore = null;
+        state.currentCard = null;
+        state.peekedCard = null;
+
+        el.log.textContent = "";
+        renderHUD();
+        beginTurn();
+      }
+
+      document.getElementById("startBtn").addEventListener("click", () => {
+        resetGame();
+        show(el.play);
+      });
+      document.getElementById("retryBtn").addEventListener("click", () => {
+        resetGame();
+        show(el.play);
+      });
+      document.getElementById("takeBtn").addEventListener("click", handleTake);
+      document.getElementById("discardBtn").addEventListener("click", handleDiscard);
+      document.getElementById("standBtn").addEventListener("click", handleStand);
+
+      const swipeTarget = document.getElementById("swipeTarget");
+      let sx = 0;
+      let sy = 0;
+      swipeTarget.addEventListener("touchstart", (ev) => {
+        const t = ev.changedTouches[0];
+        sx = t.clientX;
+        sy = t.clientY;
+      });
+
+      swipeTarget.addEventListener("touchend", (ev) => {
+        const t = ev.changedTouches[0];
+        const dx = t.clientX - sx;
+        const dy = t.clientY - sy;
+
+        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+          if (dx > 0) handleTake();
+          else handleDiscard();
+          return;
+        }
+
+        if (dy > 40 && Math.abs(dy) > Math.abs(dx)) {
+          handleStand();
+        }
+      });
+    </script>
+  </body>
+</html>

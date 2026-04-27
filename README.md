@@ -15,6 +15,7 @@ After deploying GitHub Pages, open:
 
 - Top page: `/`
 - Penguin Blocks: `/games/penguin-blocks/`
+- 21 or Curse: `/games/21-or-curse/`
 
 ## GitHub Pages
 
@@ -27,6 +28,7 @@ After deploying GitHub Pages, open:
 ## Game Design Docs
 
 - [21 or Curse MVP spec](design-docs/21-or-curse-spec.md)
+- [21 or Curse prototype](docs/games/21-or-curse/index.html)
 
 ## Intellectual Property Note
 
