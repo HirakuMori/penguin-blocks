@@ -13,14 +13,23 @@
       .panel { background: #fff; border: 1px solid #bcd; border-radius: 10px; padding: 10px; }
       .label { font-size: 12px; color: #456; }
       .value { font-size: 20px; font-weight: 700; }
-      .main { position: relative; background: #ddf4ff; border: 2px solid #7ab4d9; border-radius: 10px; height: 520px; overflow: hidden; }
+      .main { position: relative; background: linear-gradient(#d8f2ff,#c4e9ff); border: 2px solid #7ab4d9; border-radius: 10px; height: 520px; overflow: hidden; touch-action: none; }
       .order { position: absolute; left: 10px; top: 10px; padding: 8px 12px; background: #fffbe8; border: 1px solid #d8c675; border-radius: 8px; font-weight: 700; }
       .msg { position: absolute; right: 10px; top: 10px; width: 44%; min-height: 44px; padding: 8px; background: rgba(255,255,255,0.9); border-radius: 8px; font-size: 13px; }
-      .rice { position: absolute; width: 90px; height: 38px; border-radius: 30px; background: linear-gradient(180deg, #fff, #e8eef3); border: 2px solid #cdd6df; box-shadow: inset 0 -4px 0 #dfe7ee; }
-      .item { position: absolute; width: 72px; height: 36px; border-radius: 999px; color: #fff; font-weight: 700; display: grid; place-items: center; border: 2px solid rgba(0,0,0,0.2); }
-      .controls { margin-top: 10px; font-size: 14px; color: #345; }
+      .rice { position: absolute; width: 96px; height: 46px; background-repeat: no-repeat; background-size: contain; filter: drop-shadow(0 4px 3px rgba(0,0,0,0.2)); }
+      .item { position: absolute; width: 78px; height: 42px; background-repeat: no-repeat; background-size: contain; filter: drop-shadow(0 3px 2px rgba(0,0,0,0.18)); }
+      .itemLabel { position: absolute; left: 0; right: 0; top: 10px; text-align: center; color: #163047; font-size: 11px; font-weight: 700; text-shadow: 0 1px 0 rgba(255,255,255,0.8); }
+      .controls { margin-top: 10px; font-size: 14px; color: #345; display: grid; gap: 8px; }
+      .touch-controls { display: none; gap: 10px; }
+      .touch-controls button { flex: 1; min-height: 52px; font-size: 20px; }
       button { border: 0; border-radius: 8px; background: #2c82c9; color: #fff; font-weight: 700; padding: 10px 14px; cursor: pointer; }
       a { color: #155fa0; }
+      @media (max-width: 700px) {
+        .app { padding: 10px; }
+        .hud { grid-template-columns: repeat(2, minmax(0,1fr)); }
+        .main { height: 62vh; min-height: 420px; }
+        .touch-controls { display: flex; }
+      }
     </style>
   </head>
   <body>
@@ -39,26 +48,49 @@
       </div>
       <div class="controls">
         <button id="startBtn">Start</button>
-        ← → キー / A D でシャリ移動 ・ <a href="../../index.html">ゲーム一覧へ戻る</a>
+        ← → キー / A D ・ 画面ドラッグ ・ 下のボタンでシャリ移動
+        <div class="touch-controls">
+          <button id="leftBtn" aria-label="左へ移動">⬅️</button>
+          <button id="rightBtn" aria-label="右へ移動">➡️</button>
+        </div>
+        <a href="../../index.html">ゲーム一覧へ戻る</a>
       </div>
     </div>
     <script>
-      const SUSHI_TYPES=[{key:"maguro",name:"まぐろ",color:"#d44"},{key:"salmon",name:"サーモン",color:"#f98d45"},{key:"ebi",name:"えび",color:"#ff6a88"},{key:"tamago",name:"たまご",color:"#e8b200"},{key:"ika",name:"いか",color:"#6b7a94"}];
+      const svg=(body)=>`data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 120'>${body}</svg>`)}`;
+      const riceArt=svg("<ellipse cx='110' cy='75' rx='92' ry='36' fill='%23fefefe'/><ellipse cx='110' cy='83' rx='88' ry='28' fill='%23e8eef3'/><ellipse cx='110' cy='69' rx='82' ry='22' fill='%23ffffff' opacity='0.95'/>");
+      const SUSHI_TYPES=[
+        {key:"maguro",name:"まぐろ",art:svg("<ellipse cx='110' cy='70' rx='92' ry='38' fill='%23ffffff'/><ellipse cx='110' cy='74' rx='86' ry='28' fill='%23e7edf4'/><ellipse cx='110' cy='50' rx='86' ry='24' fill='%23d84e4a'/><path d='M24 54 C70 22,150 22,196 54' stroke='%23f17e7a' stroke-width='7' fill='none' opacity='0.8'/>")},
+        {key:"salmon",name:"サーモン",art:svg("<ellipse cx='110' cy='70' rx='92' ry='38' fill='%23ffffff'/><ellipse cx='110' cy='74' rx='86' ry='28' fill='%23e7edf4'/><ellipse cx='110' cy='50' rx='86' ry='24' fill='%23ff8c47'/><path d='M30 50 H190 M40 57 H180 M50 43 H170' stroke='%23ffd0a5' stroke-width='6' opacity='0.75'/>")},
+        {key:"ebi",name:"えび",art:svg("<ellipse cx='110' cy='70' rx='92' ry='38' fill='%23ffffff'/><ellipse cx='110' cy='74' rx='86' ry='28' fill='%23e7edf4'/><ellipse cx='110' cy='50' rx='86' ry='24' fill='%23ff6f95'/><path d='M40 47 C90 65,130 30,182 50' stroke='%23ffd0dc' stroke-width='6' fill='none' opacity='0.85'/>")},
+        {key:"tamago",name:"たまご",art:svg("<ellipse cx='110' cy='70' rx='92' ry='38' fill='%23ffffff'/><ellipse cx='110' cy='74' rx='86' ry='28' fill='%23e7edf4'/><rect x='24' y='30' width='172' height='44' rx='18' fill='%23f5c515'/><rect x='94' y='30' width='32' height='44' fill='%23212a31' opacity='0.78'/>")},
+        {key:"ika",name:"いか",art:svg("<ellipse cx='110' cy='70' rx='92' ry='38' fill='%23ffffff'/><ellipse cx='110' cy='74' rx='86' ry='28' fill='%23e7edf4'/><ellipse cx='110' cy='50' rx='86' ry='24' fill='%23b3bfd3'/><path d='M34 55 Q110 32 186 55' stroke='%23dce5f4' stroke-width='7' fill='none' opacity='0.8'/>")}
+      ];
       const state={running:false,score:0,timeLeft:60,order:null,riceX:0,riceSpeed:0,items:[],spawnTimer:0,orderTimer:0};
-      const field=document.getElementById("field"),rice=document.getElementById("rice"),scoreEl=document.getElementById("score"),timeEl=document.getElementById("time"),orderTextEl=document.getElementById("orderText"),orderNoteEl=document.getElementById("orderNote"),messageEl=document.getElementById("message"),stateTextEl=document.getElementById("stateText"),startBtn=document.getElementById("startBtn");
+      const field=document.getElementById("field"),rice=document.getElementById("rice"),scoreEl=document.getElementById("score"),timeEl=document.getElementById("time"),orderTextEl=document.getElementById("orderText"),orderNoteEl=document.getElementById("orderNote"),messageEl=document.getElementById("message"),stateTextEl=document.getElementById("stateText"),startBtn=document.getElementById("startBtn"),leftBtn=document.getElementById("leftBtn"),rightBtn=document.getElementById("rightBtn");
       const keys={left:false,right:false};
       function chooseOrder(){state.order=SUSHI_TYPES[Math.floor(Math.random()*SUSHI_TYPES.length)];state.orderTimer=0;orderTextEl.textContent=state.order.name;orderNoteEl.textContent=`注文: ${state.order.name}`;}
       function addMessage(t){messageEl.textContent=t;} function updateHud(){scoreEl.textContent=state.score;timeEl.textContent=Math.ceil(state.timeLeft);} 
       function applyScore(d,r){state.score+=d;addMessage(`${r} (${d>0?"+":""}${d})`);} function nextOrderWithPenalty(){applyScore(-4,"注文未達成！次の注文へ");chooseOrder();}
-      function resetGame(){state.running=true;state.score=0;state.timeLeft=60;state.items.forEach(it=>it.el.remove());state.items=[];state.spawnTimer=0;state.riceX=field.clientWidth/2-45;chooseOrder();updateHud();addMessage("注文ネタを狙ってキャッチ！違うネタや取り逃しは減点");stateTextEl.textContent="プレイ中";}
-      function spawnItem(){const type=SUSHI_TYPES[Math.floor(Math.random()*SUSHI_TYPES.length)],el=document.createElement("div");el.className="item";el.textContent=type.name;el.style.background=type.color;const x=Math.random()*(field.clientWidth-76),speed=110+Math.random()*120,item={type,x,y:-40,speed,el};el.style.left=`${x}px`;el.style.top=`${item.y}px`;field.appendChild(el);state.items.push(item);} 
+      rice.style.backgroundImage=`url(${riceArt})`;
+      function resetGame(){state.running=true;state.score=0;state.timeLeft=60;state.items.forEach(it=>it.el.remove());state.items=[];state.spawnTimer=0;state.riceX=field.clientWidth/2-48;chooseOrder();updateHud();addMessage("注文ネタを狙ってキャッチ！違うネタや取り逃しは減点");stateTextEl.textContent="プレイ中";}
+      function spawnItem(){const type=SUSHI_TYPES[Math.floor(Math.random()*SUSHI_TYPES.length)],el=document.createElement("div"),label=document.createElement("div");el.className="item";el.style.backgroundImage=`url(${type.art})`;label.className="itemLabel";label.textContent=type.name;el.appendChild(label);const x=Math.random()*(field.clientWidth-78),speed=110+Math.random()*120,item={type,x,y:-40,speed,el};el.style.left=`${x}px`;el.style.top=`${item.y}px`;field.appendChild(el);state.items.push(item);} 
       function gameOver(){state.running=false;stateTextEl.textContent="終了";addMessage(`終了！最終スコア: ${state.score}`);} 
       function tick(dt){if(!state.running)return;state.timeLeft-=dt;if(state.timeLeft<=0){state.timeLeft=0;updateHud();gameOver();return;}state.spawnTimer+=dt;state.orderTimer+=dt;if(state.spawnTimer>0.75){state.spawnTimer=0;spawnItem();}if(state.orderTimer>=7){nextOrderWithPenalty();}
-      const speed=320;state.riceSpeed=(keys.left?-1:0)+(keys.right?1:0);state.riceX+=state.riceSpeed*speed*dt;state.riceX=Math.max(0,Math.min(field.clientWidth-90,state.riceX));rice.style.left=`${state.riceX}px`;rice.style.bottom='18px';const riceY=field.clientHeight-56;
-      for(let i=state.items.length-1;i>=0;i--){const item=state.items[i];item.y+=item.speed*dt;item.el.style.top=`${item.y}px`;const hitX=item.x+72>state.riceX&&item.x<state.riceX+90,hitY=item.y+36>=riceY&&item.y<=riceY+38;if(hitX&&hitY){if(item.type.key===state.order.key){applyScore(+10,`${item.type.name}を正解キャッチ`);chooseOrder();}else{applyScore(-6,`${item.type.name}は注文外`);}item.el.remove();state.items.splice(i,1);continue;}if(item.y>field.clientHeight+8){if(item.type.key===state.order.key)nextOrderWithPenalty();item.el.remove();state.items.splice(i,1);}}
+      const speed=320;state.riceSpeed=(keys.left?-1:0)+(keys.right?1:0);state.riceX+=state.riceSpeed*speed*dt;state.riceX=Math.max(0,Math.min(field.clientWidth-96,state.riceX));rice.style.left=`${state.riceX}px`;rice.style.bottom='18px';const riceY=field.clientHeight-64;
+      for(let i=state.items.length-1;i>=0;i--){const item=state.items[i];item.y+=item.speed*dt;item.el.style.top=`${item.y}px`;const hitX=item.x+78>state.riceX&&item.x<state.riceX+96,hitY=item.y+42>=riceY&&item.y<=riceY+46;if(hitX&&hitY){if(item.type.key===state.order.key){applyScore(+10,`${item.type.name}を正解キャッチ`);chooseOrder();}else{applyScore(-6,`${item.type.name}は注文外`);}item.el.remove();state.items.splice(i,1);continue;}if(item.y>field.clientHeight+8){if(item.type.key===state.order.key)nextOrderWithPenalty();item.el.remove();state.items.splice(i,1);}}
       updateHud();}
       document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a')keys.left=true;if(e.key==='ArrowRight'||e.key.toLowerCase()==='d')keys.right=true;});
       document.addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a')keys.left=false;if(e.key==='ArrowRight'||e.key.toLowerCase()==='d')keys.right=false;});
+      function bindHoldButton(button,keyName){
+        button.addEventListener('pointerdown',()=>{keys[keyName]=true;});
+        button.addEventListener('pointerup',()=>{keys[keyName]=false;});
+        button.addEventListener('pointerleave',()=>{keys[keyName]=false;});
+        button.addEventListener('pointercancel',()=>{keys[keyName]=false;});
+      }
+      bindHoldButton(leftBtn,'left');bindHoldButton(rightBtn,'right');
+      field.addEventListener('pointerdown',e=>{if(e.target.closest('.touch-controls'))return;const rect=field.getBoundingClientRect();state.riceX=Math.max(0,Math.min(field.clientWidth-96,e.clientX-rect.left-48));});
+      field.addEventListener('pointermove',e=>{if(e.buttons!==1)return;const rect=field.getBoundingClientRect();state.riceX=Math.max(0,Math.min(field.clientWidth-96,e.clientX-rect.left-48));});
       startBtn.addEventListener('click',resetGame);let prev=performance.now();function loop(now){const dt=Math.min(0.033,(now-prev)/1000);prev=now;tick(dt);requestAnimationFrame(loop);}resetGame();state.running=false;stateTextEl.textContent='待機中';requestAnimationFrame(loop);
     </script>
   </body>
