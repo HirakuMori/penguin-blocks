@@ -1,4 +1,4 @@
-# Penguin Blocks
+# Hakai Games
 
 Browser game repository for hosting multiple mini games via GitHub Pages.
 
@@ -13,9 +13,9 @@ Browser game repository for hosting multiple mini games via GitHub Pages.
 
 After deploying GitHub Pages, open:
 
-- Top page: `/`
-- Penguin Blocks: `/games/penguin-blocks/`
-- 21 or Curse: `/games/21-or-curse/`
+- Top page: `https://hirakumori.github.io/hakai-games/`
+- Penguin Blocks: `https://hirakumori.github.io/hakai-games/games/penguin-blocks/`
+- 21 or Curse: `https://hirakumori.github.io/hakai-games/games/21-or-curse/`
 
 ## GitHub Pages
 
