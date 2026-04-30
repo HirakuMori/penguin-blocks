@@ -44,7 +44,7 @@ A retro-BBS-styled (Win98/teal-and-navy) directory page in Japanese. The visitor
 
 ### Penguin Blocks is special
 
-`docs/games/penguin-blocks/index.html` is **not hand-written** — it is a pre-bundled artifact containing `<script type="__bundler/manifest">`, `<script type="__bundler/template">`, `<script type="__bundler/ext_resources">` blocks and an `__bundler_loading` / `__bundler_thumbnail` loader UI. Treat it as opaque output: do not edit its bundled payload by hand. Other games (21-or-curse, sushi-catch, loop-forge) are plain hand-written HTML and can be edited directly.
+`docs/games/penguin-blocks/index.html` is **not hand-written** — it is a pre-bundled artifact containing `<script type="__bundler/manifest">`, `<script type="__bundler/template">`, `<script type="__bundler/ext_resources">` blocks and an `__bundler_loading` / `__bundler_thumbnail` loader UI. Treat it as opaque output: do not edit its bundled payload by hand. Other games (21-or-curse, sushi-catch, loop-forge, post-penguin-sorter) are plain hand-written HTML and can be edited directly.
 
 ### Design docs
 

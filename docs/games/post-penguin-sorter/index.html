@@ -17,6 +17,7 @@
         --blue: #a9dcf0;
         --yellow: #ffe49a;
         --green: #bde6c8;
+        --gate: #6b5b95;
         font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", system-ui, sans-serif;
       }
 
@@ -44,7 +45,7 @@
         margin: 0 auto;
         padding: 12px 12px 16px;
         display: grid;
-        grid-template-rows: auto auto minmax(360px, 1fr) auto;
+        grid-template-rows: auto auto minmax(370px, 1fr) auto auto;
         gap: 10px;
       }
 
@@ -83,7 +84,7 @@
 
       .stat,
       .message,
-      .mail-card {
+      .parcel {
         background: var(--panel);
         border-radius: 20px;
         box-shadow: var(--shadow);
@@ -124,20 +125,60 @@
         position: absolute;
         left: 0;
         right: 0;
-        top: 42%;
-        height: 86px;
+        top: 43%;
+        height: 96px;
+        transform: translateY(-50%);
         background:
           repeating-linear-gradient(90deg, rgba(45,42,58,0.08) 0 26px, rgba(45,42,58,0.02) 26px 52px),
           linear-gradient(180deg, #e0d4db, #f0e5eb);
         border-block: 2px solid rgba(45,42,58,0.12);
       }
 
+      .belt::before,
+      .belt::after {
+        content: "";
+        position: absolute;
+        top: 16px;
+        width: 24px;
+        height: 64px;
+        border-radius: 999px;
+        background: rgba(45,42,58,0.12);
+      }
+
+      .belt::before { left: 12px; }
+      .belt::after { right: 12px; }
+
+      .gate {
+        position: absolute;
+        left: 50%;
+        top: 43%;
+        width: 96px;
+        height: 122px;
+        transform: translate(-50%, -50%);
+        border: 3px dashed rgba(107,91,149,0.74);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.2);
+        pointer-events: none;
+      }
+
+      .gate::before {
+        content: "ここで押す";
+        position: absolute;
+        left: 50%;
+        top: -28px;
+        transform: translateX(-50%);
+        color: var(--gate);
+        font-size: 12px;
+        font-weight: 900;
+        white-space: nowrap;
+      }
+
       .penguin {
         position: absolute;
         left: 50%;
-        bottom: 118px;
-        width: 118px;
-        height: 136px;
+        bottom: 116px;
+        width: 112px;
+        height: 130px;
         transform: translateX(-50%);
         filter: drop-shadow(0 8px 0 rgba(45,42,58,0.08));
         pointer-events: none;
@@ -146,10 +187,10 @@
       .penguin::before {
         content: "";
         position: absolute;
-        left: 13px;
-        top: 14px;
-        width: 92px;
-        height: 112px;
+        left: 12px;
+        top: 13px;
+        width: 88px;
+        height: 108px;
         border-radius: 48% 48% 46% 46%;
         background: var(--blue);
         border: 3px solid var(--ink);
@@ -158,10 +199,10 @@
       .penguin::after {
         content: "";
         position: absolute;
-        left: 33px;
-        top: 42px;
-        width: 52px;
-        height: 72px;
+        left: 31px;
+        top: 40px;
+        width: 50px;
+        height: 70px;
         border-radius: 50%;
         background: #f7fcff;
       }
@@ -174,7 +215,7 @@
       }
 
       .eye {
-        top: 48px;
+        top: 46px;
         width: 10px;
         height: 10px;
         border-radius: 50%;
@@ -182,11 +223,11 @@
         box-shadow: 3px -2px 0 -1px #fff;
       }
 
-      .eye.left { left: 43px; }
-      .eye.right { right: 43px; }
+      .eye.left { left: 40px; }
+      .eye.right { right: 40px; }
 
       .cheek {
-        top: 66px;
+        top: 64px;
         width: 14px;
         height: 10px;
         border-radius: 50%;
@@ -194,17 +235,54 @@
         opacity: 0.85;
       }
 
-      .cheek.left { left: 28px; }
-      .cheek.right { right: 28px; }
+      .cheek.left { left: 27px; }
+      .cheek.right { right: 27px; }
 
       .beak {
-        left: 51px;
-        top: 61px;
+        left: 47px;
+        top: 59px;
         width: 0;
         height: 0;
         border-left: 9px solid transparent;
         border-right: 9px solid transparent;
         border-top: 15px solid #ffc27a;
+      }
+
+      .parcel {
+        position: absolute;
+        left: 0;
+        top: 43%;
+        width: 140px;
+        min-height: 92px;
+        padding: 10px 12px;
+        transform: translate(-180px, -50%);
+        text-align: center;
+        will-change: transform, opacity;
+        border: 2px solid rgba(45,42,58,0.1);
+      }
+
+      .parcel .stamp {
+        width: 34px;
+        height: 28px;
+        margin-left: auto;
+        border-radius: 7px;
+        background: var(--stamp);
+        box-shadow: inset 0 0 0 3px rgba(255,255,255,0.48);
+      }
+
+      .parcel .address {
+        margin-top: 7px;
+        padding-top: 8px;
+        border-top: 2px dashed rgba(45,42,58,0.15);
+        font-size: 16px;
+        font-weight: 900;
+      }
+
+      .parcel .hint {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
       }
 
       .slot-row {
@@ -277,40 +355,44 @@
       .slot.yellow { background: var(--yellow); }
       .slot.green { background: var(--green); }
 
-      .mail-card {
-        position: absolute;
-        left: 50%;
-        top: 42%;
-        width: 138px;
-        min-height: 92px;
-        padding: 11px 12px;
-        transform: translate(-50%, -50%);
-        text-align: center;
-        will-change: transform, opacity;
-      }
-
-      .mail-card .stamp {
-        width: 34px;
-        height: 28px;
-        margin-left: auto;
-        border-radius: 7px;
-        background: var(--stamp);
-        box-shadow: inset 0 0 0 3px rgba(255,255,255,0.48);
-      }
-
-      .mail-card .address {
-        margin-top: 7px;
-        padding-top: 8px;
-        border-top: 2px dashed rgba(45,42,58,0.15);
-        font-size: 16px;
+      .timing {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 8px;
+        align-items: center;
+        color: var(--muted);
+        font-size: 12px;
         font-weight: 900;
       }
 
-      .mail-card .hint {
-        margin-top: 2px;
-        color: var(--muted);
-        font-size: 11px;
-        font-weight: 800;
+      .timing-bar {
+        position: relative;
+        height: 12px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.72);
+        box-shadow: inset 0 0 0 2px rgba(45,42,58,0.06);
+      }
+
+      .timing-bar::before {
+        content: "";
+        position: absolute;
+        left: calc(50% - 10%);
+        top: 0;
+        bottom: 0;
+        width: 20%;
+        background: rgba(107,91,149,0.26);
+      }
+
+      .needle {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 4px;
+        height: 100%;
+        border-radius: 999px;
+        background: var(--gate);
+        transform: translateX(-2px);
       }
 
       .message {
@@ -392,7 +474,7 @@
       }
 
       .overlay-panel {
-        width: min(100%, 290px);
+        width: min(100%, 300px);
         padding: 22px 20px 18px;
         border-radius: 24px;
         background: #fff;
@@ -437,6 +519,7 @@
         .value { font-size: 17px; }
         .slot { min-height: 76px; font-size: 12px; }
         .slot .mark { width: 34px; }
+        .parcel { width: 126px; }
       }
     </style>
   </head>
@@ -456,6 +539,7 @@
 
       <main class="stage" id="stage" aria-label="仕分け場">
         <div class="belt"></div>
+        <div class="gate" aria-hidden="true"></div>
         <div class="toast" id="toast">正解！</div>
         <div class="penguin" aria-hidden="true">
           <span class="eye left"></span>
@@ -464,19 +548,25 @@
           <span class="cheek right"></span>
           <span class="beak"></span>
         </div>
-        <div id="mail" class="mail-card" aria-live="polite"></div>
+        <div id="parcel" class="parcel" aria-live="polite"></div>
         <div class="slot-row" id="slots"></div>
         <div class="overlay on" id="overlay">
           <div class="overlay-panel">
             <h2 id="overlayTitle">配達準備OK</h2>
-            <p id="overlayText">封筒の行き先と同じ色のポストへ仕分けよう。数字キー1〜4、またはポストをタップ。</p>
+            <p id="overlayText">荷物が中央のゲートに重なった瞬間、宛先と同じ配達先ボタンを押そう。数字キー1〜4でも操作できます。</p>
             <button class="action" id="startBtn">はじめる</button>
           </div>
         </div>
       </main>
 
+      <section class="timing" aria-label="タイミング表示">
+        <span>はやい</span>
+        <div class="timing-bar"><span class="needle" id="needle"></span></div>
+        <span>おそい</span>
+      </section>
+
       <section class="message">
-        <span id="message">注文票を見て、正しいポストへ。</span>
+        <span id="message">荷物がゲートに来たら、正しい配達先へ。</span>
         <span id="status">待機中</span>
       </section>
 
@@ -502,9 +592,11 @@
         combo: 0,
         best: Number(localStorage.getItem("postPenguinBest") || 0),
         current: null,
-        deadline: 0,
-        duration: 2800,
+        parcelX: -180,
+        speed: 132,
         loopId: 0,
+        lastNow: 0,
+        handled: false,
       };
 
       const el = {
@@ -512,7 +604,8 @@
         time: document.getElementById("time"),
         combo: document.getElementById("combo"),
         best: document.getElementById("best"),
-        mail: document.getElementById("mail"),
+        parcel: document.getElementById("parcel"),
+        needle: document.getElementById("needle"),
         slots: document.getElementById("slots"),
         stage: document.getElementById("stage"),
         toast: document.getElementById("toast"),
@@ -555,8 +648,10 @@
       }
 
       function sfx(kind) {
-        if (kind === "ok") {
-          [660, 880, 1174].forEach((f, i) => tone(f, 0.15, i * 0.045));
+        if (kind === "perfect") {
+          [784, 1046, 1318].forEach((f, i) => tone(f, 0.15, i * 0.04));
+        } else if (kind === "ok") {
+          [660, 880].forEach((f, i) => tone(f, 0.14, i * 0.05));
         } else if (kind === "ng") {
           tone(220, 0.18, 0, "sawtooth", 0.18);
           tone(150, 0.24, 0.07, "sawtooth", 0.14);
@@ -575,7 +670,10 @@
           button.type = "button";
           button.setAttribute("aria-label", `${index + 1}. ${dest.name}`);
           button.innerHTML = `<span class="key">${index + 1}</span><span class="mark"></span><span>${dest.name}</span>`;
-          button.addEventListener("pointerdown", () => sortTo(dest.key));
+          button.addEventListener("pointerdown", (event) => {
+            event.preventDefault();
+            sortTo(dest.key);
+          });
           el.slots.appendChild(button);
         });
       }
@@ -589,17 +687,50 @@
         el.soundBtn.textContent = state.sound ? "音 ON" : "音 OFF";
       }
 
-      function chooseMail() {
+      function stageMetrics() {
+        const rect = el.stage.getBoundingClientRect();
+        const parcelWidth = el.parcel.offsetWidth || 140;
+        return {
+          width: rect.width,
+          start: -parcelWidth - 36,
+          end: rect.width + 36,
+          gate: rect.width / 2,
+          ok: Math.max(44, Math.min(58, rect.width * 0.13)),
+          perfect: Math.max(18, Math.min(26, rect.width * 0.06)),
+          parcelWidth,
+        };
+      }
+
+      function chooseParcel() {
+        const metrics = stageMetrics();
         state.current = DESTS[Math.floor(Math.random() * DESTS.length)];
-        state.deadline = performance.now() + state.duration;
-        el.mail.style.opacity = "1";
-        el.mail.style.transform = "translate(-50%, -50%) scale(1)";
-        el.mail.style.setProperty("--stamp", state.current.color);
-        el.mail.innerHTML = `
+        state.parcelX = metrics.start;
+        state.handled = false;
+        state.speed = Math.min(260, 132 + state.score * 0.09 + state.combo * 3.5);
+        el.parcel.style.opacity = "1";
+        el.parcel.style.setProperty("--stamp", state.current.color);
+        el.parcel.innerHTML = `
           <div class="stamp"></div>
           <div class="address">${state.current.name} 行き</div>
-          <div class="hint">${state.current.kana}のポストへ</div>
+          <div class="hint">${state.current.kana}の配達先へ</div>
         `;
+        placeParcel();
+      }
+
+      function parcelCenter() {
+        return state.parcelX + (el.parcel.offsetWidth || 140) / 2;
+      }
+
+      function timingDelta() {
+        const metrics = stageMetrics();
+        return parcelCenter() - metrics.gate;
+      }
+
+      function placeParcel() {
+        el.parcel.style.transform = `translate(${state.parcelX}px, -50%)`;
+        const metrics = stageMetrics();
+        const progress = Math.max(0, Math.min(1, (parcelCenter() - metrics.start) / (metrics.end - metrics.start)));
+        el.needle.style.left = `${progress * 100}%`;
       }
 
       function showToast(text, ok) {
@@ -616,7 +747,7 @@
           const dot = document.createElement("span");
           dot.className = "spark";
           dot.style.left = `${rect.width / 2 + (Math.random() - 0.5) * 90}px`;
-          dot.style.top = `${rect.height * 0.44 + (Math.random() - 0.5) * 55}px`;
+          dot.style.top = `${rect.height * 0.43 + (Math.random() - 0.5) * 55}px`;
           dot.style.setProperty("--spark", color);
           dot.style.setProperty("--dx", `${(Math.random() - 0.5) * 130}px`);
           dot.style.setProperty("--dy", `${-30 - Math.random() * 90}px`);
@@ -625,36 +756,75 @@
         }
       }
 
-      function sortTo(key) {
-        if (!state.running || !state.current) return;
-        const ok = key === state.current.key;
-        if (ok) {
-          state.combo += 1;
-          state.score += 10 + Math.min(20, state.combo * 2);
-          showToast(`正解！ ${state.combo}コンボ`, true);
-          spark(state.current.color);
-          sfx("ok");
-          el.message.textContent = `${state.current.name}へ配達完了。次の便！`;
-        } else {
-          state.combo = 0;
-          state.score = Math.max(0, state.score - 8);
-          showToast("誤配送！", false);
-          sfx("ng");
-          el.message.textContent = `${state.current.name}行きではありません。落ち着いて仕分けよう。`;
-        }
-        state.duration = Math.max(1250, state.duration - 18);
-        chooseMail();
-        updateHud();
+      function flashSlot(key) {
+        const button = el.slots.querySelector(`.${key}`);
+        if (!button) return;
+        button.classList.add("active");
+        setTimeout(() => button.classList.remove("active"), 120);
       }
 
-      function missMail() {
+      function scoreHit(delta) {
+        const metrics = stageMetrics();
+        const perfect = Math.abs(delta) <= metrics.perfect;
+        state.combo += 1;
+        state.score += (perfect ? 25 : 12) + Math.min(30, state.combo * 2);
+        showToast(perfect ? `ぴったり！ ${state.combo}コンボ` : `配達！ ${state.combo}コンボ`, true);
+        spark(state.current.color);
+        sfx(perfect ? "perfect" : "ok");
+        el.message.textContent = perfect ? `${state.current.name}へど真ん中配達！` : `${state.current.name}へ配達完了。次の便！`;
+      }
+
+      function fail(reason) {
+        const name = state.current ? state.current.name : "荷物";
         state.combo = 0;
-        state.score = Math.max(0, state.score - 5);
-        showToast("時間切れ！", false);
+        state.score = Math.max(0, state.score - 7);
+        showToast(reason.toast, false);
         sfx("ng");
-        el.message.textContent = `${state.current.name}行きが積み残しに。次こそ！`;
-        chooseMail();
+        el.message.textContent = reason.message(name);
+      }
+
+      function nextParcelSoon() {
+        state.handled = true;
+        el.parcel.style.opacity = "0";
         updateHud();
+        setTimeout(() => {
+          if (state.running) chooseParcel();
+        }, 240);
+      }
+
+      function sortTo(key) {
+        if (!state.running || !state.current || state.handled) return;
+        flashSlot(key);
+        const metrics = stageMetrics();
+        const delta = timingDelta();
+        const inWindow = Math.abs(delta) <= metrics.ok;
+        if (!inWindow) {
+          fail({
+            toast: delta < 0 ? "早すぎ！" : "遅すぎ！",
+            message: (name) => `${name}行き、${delta < 0 ? "まだゲート前です。" : "通り過ぎました。"}`,
+          });
+          nextParcelSoon();
+          return;
+        }
+        if (key !== state.current.key) {
+          fail({
+            toast: "誤配送！",
+            message: (name) => `${name}行きではありません。宛先もタイミングも見よう。`,
+          });
+          nextParcelSoon();
+          return;
+        }
+        scoreHit(delta);
+        nextParcelSoon();
+      }
+
+      function missParcel() {
+        if (state.handled || !state.current) return;
+        fail({
+          toast: "見送り！",
+          message: (name) => `${name}行きがゲートを通過。次こそ押そう！`,
+        });
+        nextParcelSoon();
       }
 
       function startGame() {
@@ -665,10 +835,10 @@
         state.score = 0;
         state.combo = 0;
         state.time = 45;
-        state.duration = 2800;
+        state.lastNow = 0;
         el.overlay.classList.remove("on");
-        el.message.textContent = "封筒の行き先と同じポストを選んでください。";
-        chooseMail();
+        el.message.textContent = "ゲートに重なった瞬間、宛先と同じボタンを押してください。";
+        chooseParcel();
         updateHud();
         sfx("start");
         state.loopId = requestAnimationFrame(loop);
@@ -687,19 +857,24 @@
         el.startBtn.textContent = "もう一回";
         el.overlay.classList.add("on");
         el.message.textContent = "おつかれさま！ペンギン局員も満足そうです。";
-        el.mail.style.opacity = "0";
+        el.parcel.style.opacity = "0";
         updateHud();
         sfx("over");
       }
 
       function loop(now) {
         if (!state.running) return;
-        state.time -= 1 / 60;
-        const remain = Math.max(0, (state.deadline - now) / state.duration);
-        el.mail.style.transform = `translate(-50%, -50%) scale(${0.92 + remain * 0.08})`;
-        if (now > state.deadline) missMail();
+        if (!state.lastNow) state.lastNow = now;
+        const dt = Math.min(0.05, (now - state.lastNow) / 1000);
+        state.lastNow = now;
+        state.time = Math.max(0, state.time - dt);
+        if (!state.handled) {
+          state.parcelX += state.speed * dt;
+          placeParcel();
+          const metrics = stageMetrics();
+          if (parcelCenter() > metrics.gate + metrics.ok) missParcel();
+        }
         if (state.time <= 0) {
-          state.time = 0;
           updateHud();
           endGame();
           return;
@@ -729,9 +904,11 @@
         updateHud();
       });
 
+      window.addEventListener("resize", placeParcel);
+
       renderSlots();
       updateHud();
-      chooseMail();
+      chooseParcel();
     </script>
   </body>
 </html>
