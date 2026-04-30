@@ -690,6 +690,9 @@
         { key: "green", name: "みどり丘", color: "#bde6c8", kana: "みどり" },
       ];
 
+      const SPEED_BASE = 132;
+      const SPEED_MAX = 286;
+
       const state = {
         running: false,
         sound: true,
@@ -699,7 +702,7 @@
         best: Number(localStorage.getItem("postPenguinBest") || 0),
         current: null,
         parcelX: -180,
-        speed: 132,
+        speed: SPEED_BASE,
         loopId: 0,
         lastNow: 0,
         handled: false,
@@ -791,8 +794,15 @@
         el.time.textContent = Math.ceil(state.time);
         el.combo.textContent = state.combo;
         el.best.textContent = state.best.toLocaleString();
-        el.status.textContent = state.running ? "仕分け中" : "待機中";
+        el.status.textContent = state.running ? `速度 x${(state.speed / SPEED_BASE).toFixed(1)}` : "待機中";
         el.soundBtn.textContent = state.sound ? "音 ON" : "音 OFF";
+      }
+
+      function speedForCombo(combo) {
+        const early = Math.min(combo, 5) * 9;
+        const middle = Math.min(Math.max(combo - 5, 0), 7) * 13;
+        const late = Math.max(combo - 12, 0) * 7;
+        return Math.min(SPEED_MAX, SPEED_BASE + early + middle + late);
       }
 
       function stageMetrics() {
@@ -816,7 +826,7 @@
         state.current = DESTS[Math.floor(Math.random() * DESTS.length)];
         state.parcelX = metrics.start;
         state.handled = false;
-        state.speed = Math.min(260, 132 + state.score * 0.09 + state.combo * 3.5);
+        state.speed = speedForCombo(state.combo);
         el.parcel.classList.remove("success-flight", "fail-flight");
         el.parcel.style.opacity = "1";
         el.parcel.style.setProperty("--stamp", state.current.color);
