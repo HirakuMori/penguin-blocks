@@ -26,6 +26,9 @@
       .fx{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:44px;font-weight:900;color:#53a8d8;opacity:0;pointer-events:none}
       .fx.show{animation:pop .55s ease}
       @keyframes pop{0%{opacity:0;transform:translate(-50%,-30%) scale(.4)}35%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}100%{opacity:0;transform:translate(-50%,-70%) scale(1)}}
+      .mode{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid #cfe2ec;border-radius:14px;padding:8px 10px;margin-top:8px;font-weight:700}
+      .mode button{min-width:92px;padding:8px 12px;border-radius:999px;border:1px solid #cfe2ec;background:#f7fbfd;font-weight:800;color:#1f3b53}
+      .mode button.on{background:#4cc0b6;border-color:#33a69d;color:#fff}
       .tools{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
       .tools button{padding:10px;border-radius:12px;border:1px solid #cfe2ec;background:#fff;font-weight:700}
       .note{margin-top:8px;font-size:13px;color:#4d6a7e}.back{display:block;margin-top:10px}
@@ -41,17 +44,18 @@
       </div>
       <div class="goal" id="goal">目標: 128タイルを作る</div>
       <div class="board" id="board"><div class="grid" id="grid"></div><div class="path" id="path"></div><div class="fx" id="fx"></div></div>
+      <div class="mode"><span>手数無限モード</span><button id="modeBtn" type="button">OFF</button></div>
       <div class="tools"><button id="retryBtn">↻ リトライ</button><button id="hintBtn">? ヒント</button></div>
       <div class="note" id="note">同じ数字を2個以上なぞって離すと、最後のマスで+1に合体します。</div>
       <a class="back" href="../../index.html">ゲーム一覧へ戻る</a>
     </div>
     <script>
-      const SIZE=5,START_MOVES=20;const gridEl=document.getElementById('grid'),boardEl=document.getElementById('board'),pathEl=document.getElementById('path'),movesEl=document.getElementById('moves'),scoreEl=document.getElementById('score'),noteEl=document.getElementById('note'),goalEl=document.getElementById('goal'),fxEl=document.getElementById('fx');
-      const st={grid:[],moves:START_MOVES,score:0,paused:false,done:false,animating:false,animId:0,path:[],target:128,best:Number(localStorage.getItem('loopForgeBest')||0)};
+      const SIZE=5,START_MOVES=20;const gridEl=document.getElementById('grid'),boardEl=document.getElementById('board'),pathEl=document.getElementById('path'),movesEl=document.getElementById('moves'),scoreEl=document.getElementById('score'),noteEl=document.getElementById('note'),goalEl=document.getElementById('goal'),fxEl=document.getElementById('fx'),modeBtn=document.getElementById('modeBtn');
+      const st={grid:[],moves:START_MOVES,infiniteMoves:localStorage.getItem('loopForgeInfiniteMoves')==='1',score:0,paused:false,done:false,animating:false,animId:0,path:[],target:128,best:Number(localStorage.getItem('loopForgeBest')||0)};
       function randBase(){return 1+Math.floor(Math.random()*4)}
       function init(){st.animId++;st.grid=Array.from({length:SIZE},()=>Array.from({length:SIZE},randBase));st.moves=START_MOVES;st.score=0;st.done=false;st.paused=false;st.animating=false;st.path=[];updateHud();render();note('ループを描いて大連鎖を狙おう。')}
       function note(t){noteEl.textContent=t}
-      function updateHud(){movesEl.textContent=st.moves;scoreEl.textContent=st.score;goalEl.textContent=`目標: ${st.target}タイルを作る / BEST ${st.best}`}
+      function updateHud(){movesEl.textContent=st.infiniteMoves?'∞':st.moves;scoreEl.textContent=st.score;goalEl.textContent=`目標: ${st.target}タイルを作る / BEST ${st.best}`;modeBtn.textContent=st.infiniteMoves?'ON':'OFF';modeBtn.classList.toggle('on',st.infiniteMoves)}
       function cls(n){return `n${Math.min(8,n)}`}
       function render(){gridEl.innerHTML='';for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){const d=document.createElement('div');d.className=`cell ${cls(st.grid[r][c])}`;d.dataset.r=r;d.dataset.c=c;d.textContent=st.grid[r][c];gridEl.appendChild(d);}drawPath()}
       function cellFromElement(el){const t=el&&el.closest&&el.closest('.cell');if(!t||!gridEl.contains(t))return null;return {r:+t.dataset.r,c:+t.dataset.c,val:st.grid[+t.dataset.r][+t.dataset.c]}}
@@ -64,19 +68,20 @@
       function setCellValue(el,n){el.className=`cell ${cls(n)}`;el.textContent=n}
       function fallState(src){const next=Array.from({length:SIZE},()=>Array(SIZE).fill(0)),orig=Array.from({length:SIZE},()=>Array(SIZE).fill(null));for(let c=0;c<SIZE;c++){let write=SIZE-1;for(let r=SIZE-1;r>=0;r--)if(src[r][c]>0){next[write][c]=src[r][c];orig[write][c]={fromR:r};write--}let spawn=0;for(let r=write;r>=0;r--){next[r][c]=randBase();orig[r][c]={fromR:-1-spawn};spawn++}}return{next,orig}}
       async function animateFall(next,orig,id){st.grid=next;render();const first=gridEl.children[0],second=gridEl.children[SIZE],pitch=second.getBoundingClientRect().top-first.getBoundingClientRect().top;[...gridEl.children].forEach((el,i)=>{const r=Math.floor(i/SIZE),o=orig[r][i%SIZE];if(!o)return;const dy=(o.fromR-r)*pitch;el.style.transition='none';el.style.transform=`translateY(${dy}px)`;el.style.opacity=o.fromR<0?'0':'1'});await wait(20);if(id!==st.animId)return;[...gridEl.children].forEach(el=>{el.style.transition='transform .34s cubic-bezier(.2,.9,.25,1), opacity .24s ease';el.style.transform='translateY(0)';el.style.opacity='1'});await wait(380);if(id!==st.animId)return;[...gridEl.children].forEach(el=>{el.style.transition='';el.style.transform='';el.style.opacity=''})}
-      async function resolvePath(){if(st.path.length<2){st.path=[];drawPath();return;}const id=++st.animId;st.animating=true;const path=st.path.map(p=>({...p})),base=path[0].val,last=path[path.length-1],up=base+1;st.path=[];drawPath();path.slice(0,-1).forEach(p=>cellEl(p).classList.add('vanish'));await wait(150);if(id!==st.animId)return;const lastEl=cellEl(last);setCellValue(lastEl,up);lastEl.classList.add('merge');showFx(`+${up}`);await wait(260);if(id!==st.animId)return;const cleared=st.grid.map(row=>row.slice());for(let i=0;i<path.length-1;i++){const p=path[i];cleared[p.r][p.c]=0}cleared[last.r][last.c]=up;const gained=path.length*(base*10)+Math.max(0,path.length-3)*15;st.score+=gained;st.moves--;if(up>st.best){st.best=up;localStorage.setItem('loopForgeBest',String(st.best))}updateHud();const built=fallState(cleared);await animateFall(built.next,built.orig,id);if(id!==st.animId)return;st.animating=false;checkEnd();}
+      async function resolvePath(){if(st.path.length<2){st.path=[];drawPath();return;}const id=++st.animId;st.animating=true;const path=st.path.map(p=>({...p})),base=path[0].val,last=path[path.length-1],up=base+1;st.path=[];drawPath();path.slice(0,-1).forEach(p=>cellEl(p).classList.add('vanish'));await wait(150);if(id!==st.animId)return;const lastEl=cellEl(last);setCellValue(lastEl,up);lastEl.classList.add('merge');showFx(`+${up}`);await wait(260);if(id!==st.animId)return;const cleared=st.grid.map(row=>row.slice());for(let i=0;i<path.length-1;i++){const p=path[i];cleared[p.r][p.c]=0}cleared[last.r][last.c]=up;const gained=path.length*(base*10)+Math.max(0,path.length-3)*15;st.score+=gained;if(!st.infiniteMoves)st.moves--;if(up>st.best){st.best=up;localStorage.setItem('loopForgeBest',String(st.best))}updateHud();const built=fallState(cleared);await animateFall(built.next,built.orig,id);if(id!==st.animId)return;st.animating=false;checkEnd();}
       function collapse(){for(let c=0;c<SIZE;c++){let write=SIZE-1;for(let r=SIZE-1;r>=0;r--){if(st.grid[r][c]>0){const v=st.grid[r][c];st.grid[r][c]=0;st.grid[write][c]=v;write--;}}}}
       function refill(){for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++)if(st.grid[r][c]===0)st.grid[r][c]=randBase()}
       function showFx(t){fxEl.textContent=t;fxEl.classList.remove('show');void fxEl.offsetWidth;fxEl.classList.add('show')}
       function maxTile(){return Math.max(...st.grid.flat())}
       function hasMove(){for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){if(r+1<SIZE&&st.grid[r][c]===st.grid[r+1][c])return true;if(c+1<SIZE&&st.grid[r][c]===st.grid[r][c+1])return true;}return false}
-      function checkEnd(){if(maxTile()>=st.target){st.done=true;note('クリア！リトライで再挑戦できます。');return;}if(st.moves<=0||!hasMove()){st.done=true;note('ゲーム終了！リトライで再挑戦。');}}
+      function checkEnd(){if(maxTile()>=st.target){st.done=true;note('クリア！リトライで再挑戦できます。');return;}if((!st.infiniteMoves&&st.moves<=0)||!hasMove()){st.done=true;note('ゲーム終了！リトライで再挑戦。');}}
       let drawing=false;
       boardEl.addEventListener('pointerdown',e=>{if(st.paused||st.done||st.animating)return;const c=cellFromEvent(e);if(!c)return;e.preventDefault();drawing=true;st.path=[c];drawPath();boardEl.setPointerCapture(e.pointerId)});
       boardEl.addEventListener('pointermove',e=>{if(!drawing||st.paused||st.done||st.animating)return;const c=cellFromEvent(e);if(!c)return;if(pushPath(c)){drawPath();}});
       boardEl.addEventListener('pointerup',()=>{if(!drawing)return;drawing=false;resolvePath();});
       boardEl.addEventListener('pointercancel',()=>{drawing=false;st.path=[];drawPath();});
       document.getElementById('retryBtn').addEventListener('click',init);
+      modeBtn.addEventListener('click',()=>{st.infiniteMoves=!st.infiniteMoves;localStorage.setItem('loopForgeInfiniteMoves',st.infiniteMoves?'1':'0');init();note(st.infiniteMoves?'手数無限モードで開始しました。':'通常モードで開始しました。')});
       document.getElementById('pauseBtn').addEventListener('click',e=>{st.paused=!st.paused;e.currentTarget.textContent=st.paused?'▶':'⏸';note(st.paused?'一時停止中':'再開')});
       document.getElementById('hintBtn').addEventListener('click',()=>note('同じ数字が密集している場所を短く往復して、次ターンの種を作ると連鎖しやすいです。'));
       init();
