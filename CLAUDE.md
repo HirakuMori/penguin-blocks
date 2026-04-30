@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+> ⚠️ **IMPORTANT: This is a PUBLIC repository. NEVER commit or push any confidential information (API keys, tokens, credentials, personal data, internal/proprietary information, etc.).** ⚠️
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Repository purpose
