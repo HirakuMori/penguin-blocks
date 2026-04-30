@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>郵便ペンギン仕分け便</title>
+    <style>
+      :root {
+        --bg: #fbe9ee;
+        --bg2: #e7f4f9;
+        --ink: #2d2a3a;
+        --muted: #817d92;
+        --panel: #fff;
+        --panel2: #fff6f9;
+        --shadow: 0 8px 0 rgba(45, 42, 58, 0.08);
+        --red: #f7b8c4;
+        --blue: #a9dcf0;
+        --yellow: #ffe49a;
+        --green: #bde6c8;
+        font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", system-ui, sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        color: var(--ink);
+        background:
+          radial-gradient(900px 600px at 12% -10%, #ffe3ec 0%, transparent 60%),
+          radial-gradient(800px 580px at 105% 105%, #d9edf7 0%, transparent 58%),
+          linear-gradient(180deg, var(--bg), var(--bg2));
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+      }
+
+      .app {
+        width: min(100%, 440px);
+        min-height: 100dvh;
+        margin: 0 auto;
+        padding: 12px 12px 16px;
+        display: grid;
+        grid-template-rows: auto auto minmax(360px, 1fr) auto;
+        gap: 10px;
+      }
+
+      .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 4px 2px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.1;
+        font-weight: 900;
+      }
+
+      a {
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 800;
+        text-decoration: none;
+        background: var(--panel);
+        border-radius: 999px;
+        padding: 8px 12px;
+        box-shadow: var(--shadow);
+        white-space: nowrap;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .stat,
+      .message,
+      .mail-card {
+        background: var(--panel);
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+      }
+
+      .stat {
+        min-height: 58px;
+        padding: 8px 9px;
+      }
+
+      .label {
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+      }
+
+      .value {
+        margin-top: 2px;
+        font-size: 19px;
+        font-weight: 900;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .stage {
+        position: relative;
+        min-height: 0;
+        overflow: hidden;
+        border-radius: 24px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.65), transparent 32%),
+          linear-gradient(180deg, #fff5f8, #edf8fc);
+        box-shadow: var(--shadow), inset 0 0 0 2px rgba(255,255,255,0.9);
+        touch-action: none;
+      }
+
+      .belt {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 42%;
+        height: 86px;
+        background:
+          repeating-linear-gradient(90deg, rgba(45,42,58,0.08) 0 26px, rgba(45,42,58,0.02) 26px 52px),
+          linear-gradient(180deg, #e0d4db, #f0e5eb);
+        border-block: 2px solid rgba(45,42,58,0.12);
+      }
+
+      .penguin {
+        position: absolute;
+        left: 50%;
+        bottom: 118px;
+        width: 118px;
+        height: 136px;
+        transform: translateX(-50%);
+        filter: drop-shadow(0 8px 0 rgba(45,42,58,0.08));
+        pointer-events: none;
+      }
+
+      .penguin::before {
+        content: "";
+        position: absolute;
+        left: 13px;
+        top: 14px;
+        width: 92px;
+        height: 112px;
+        border-radius: 48% 48% 46% 46%;
+        background: var(--blue);
+        border: 3px solid var(--ink);
+      }
+
+      .penguin::after {
+        content: "";
+        position: absolute;
+        left: 33px;
+        top: 42px;
+        width: 52px;
+        height: 72px;
+        border-radius: 50%;
+        background: #f7fcff;
+      }
+
+      .eye,
+      .cheek,
+      .beak {
+        position: absolute;
+        z-index: 1;
+      }
+
+      .eye {
+        top: 48px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--ink);
+        box-shadow: 3px -2px 0 -1px #fff;
+      }
+
+      .eye.left { left: 43px; }
+      .eye.right { right: 43px; }
+
+      .cheek {
+        top: 66px;
+        width: 14px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--red);
+        opacity: 0.85;
+      }
+
+      .cheek.left { left: 28px; }
+      .cheek.right { right: 28px; }
+
+      .beak {
+        left: 51px;
+        top: 61px;
+        width: 0;
+        height: 0;
+        border-left: 9px solid transparent;
+        border-right: 9px solid transparent;
+        border-top: 15px solid #ffc27a;
+      }
+
+      .slot-row {
+        position: absolute;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .slot {
+        position: relative;
+        min-height: 86px;
+        border: 0;
+        border-radius: 18px;
+        color: var(--ink);
+        font: inherit;
+        font-size: 13px;
+        line-height: 1.15;
+        font-weight: 900;
+        cursor: pointer;
+        box-shadow: 0 6px 0 rgba(45,42,58,0.1);
+        display: grid;
+        place-items: center;
+        gap: 2px;
+        padding: 7px 4px;
+      }
+
+      .slot:active,
+      .slot.active {
+        transform: translateY(2px);
+        box-shadow: 0 4px 0 rgba(45,42,58,0.1);
+      }
+
+      .slot .mark {
+        width: 42px;
+        height: 34px;
+        border-radius: 7px;
+        background: rgba(255,255,255,0.78);
+        border: 2px solid rgba(45,42,58,0.18);
+        position: relative;
+      }
+
+      .slot .mark::before {
+        content: "";
+        position: absolute;
+        inset: 6px 5px auto;
+        height: 2px;
+        background: rgba(45,42,58,0.22);
+        box-shadow: 0 7px 0 rgba(45,42,58,0.16);
+      }
+
+      .slot .key {
+        position: absolute;
+        left: 7px;
+        top: 6px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: rgba(255,255,255,0.72);
+        font-size: 12px;
+      }
+
+      .slot.red { background: var(--red); }
+      .slot.blue { background: var(--blue); }
+      .slot.yellow { background: var(--yellow); }
+      .slot.green { background: var(--green); }
+
+      .mail-card {
+        position: absolute;
+        left: 50%;
+        top: 42%;
+        width: 138px;
+        min-height: 92px;
+        padding: 11px 12px;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        will-change: transform, opacity;
+      }
+
+      .mail-card .stamp {
+        width: 34px;
+        height: 28px;
+        margin-left: auto;
+        border-radius: 7px;
+        background: var(--stamp);
+        box-shadow: inset 0 0 0 3px rgba(255,255,255,0.48);
+      }
+
+      .mail-card .address {
+        margin-top: 7px;
+        padding-top: 8px;
+        border-top: 2px dashed rgba(45,42,58,0.15);
+        font-size: 16px;
+        font-weight: 900;
+      }
+
+      .mail-card .hint {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .message {
+        padding: 10px 12px;
+        min-height: 44px;
+        font-size: 14px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      button.action {
+        min-height: 48px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--ink);
+        color: #fff;
+        font: inherit;
+        font-size: 15px;
+        font-weight: 900;
+        cursor: pointer;
+        box-shadow: 0 5px 0 #1a1823;
+      }
+
+      button.action.secondary {
+        background: #fff;
+        color: var(--ink);
+        box-shadow: var(--shadow);
+      }
+
+      .toast {
+        position: absolute;
+        left: 50%;
+        top: 15%;
+        transform: translate(-50%, -8px);
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.94);
+        color: var(--ink);
+        font-size: 14px;
+        font-weight: 900;
+        box-shadow: var(--shadow);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.16s ease, transform 0.16s ease;
+        z-index: 3;
+      }
+
+      .toast.on {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 18px;
+        background: rgba(255,246,249,0.84);
+        backdrop-filter: blur(6px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+        z-index: 4;
+      }
+
+      .overlay.on {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .overlay-panel {
+        width: min(100%, 290px);
+        padding: 22px 20px 18px;
+        border-radius: 24px;
+        background: #fff;
+        box-shadow: 0 14px 0 rgba(45,42,58,0.08);
+        text-align: center;
+      }
+
+      .overlay-panel h2 {
+        margin: 0;
+        font-size: 24px;
+      }
+
+      .overlay-panel p {
+        margin: 8px 0 16px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.5;
+      }
+
+      .spark {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--spark);
+        pointer-events: none;
+        animation: pop 520ms ease-out forwards;
+      }
+
+      @keyframes pop {
+        to {
+          opacity: 0;
+          transform: translate(var(--dx), var(--dy)) scale(0.35);
+        }
+      }
+
+      @media (max-width: 370px) {
+        h1 { font-size: 17px; }
+        .stats { gap: 6px; }
+        .stat { padding: 7px 6px; }
+        .value { font-size: 17px; }
+        .slot { min-height: 76px; font-size: 12px; }
+        .slot .mark { width: 34px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="top">
+        <h1>郵便ペンギン仕分け便</h1>
+        <a href="../../index.html">← 一覧へ戻る</a>
+      </header>
+
+      <section class="stats" aria-label="スコア情報">
+        <div class="stat"><div class="label">SCORE</div><div class="value" id="score">0</div></div>
+        <div class="stat"><div class="label">TIME</div><div class="value" id="time">45</div></div>
+        <div class="stat"><div class="label">COMBO</div><div class="value" id="combo">0</div></div>
+        <div class="stat"><div class="label">BEST</div><div class="value" id="best">0</div></div>
+      </section>
+
+      <main class="stage" id="stage" aria-label="仕分け場">
+        <div class="belt"></div>
+        <div class="toast" id="toast">正解！</div>
+        <div class="penguin" aria-hidden="true">
+          <span class="eye left"></span>
+          <span class="eye right"></span>
+          <span class="cheek left"></span>
+          <span class="cheek right"></span>
+          <span class="beak"></span>
+        </div>
+        <div id="mail" class="mail-card" aria-live="polite"></div>
+        <div class="slot-row" id="slots"></div>
+        <div class="overlay on" id="overlay">
+          <div class="overlay-panel">
+            <h2 id="overlayTitle">配達準備OK</h2>
+            <p id="overlayText">封筒の行き先と同じ色のポストへ仕分けよう。数字キー1〜4、またはポストをタップ。</p>
+            <button class="action" id="startBtn">はじめる</button>
+          </div>
+        </div>
+      </main>
+
+      <section class="message">
+        <span id="message">注文票を見て、正しいポストへ。</span>
+        <span id="status">待機中</span>
+      </section>
+
+      <section class="controls">
+        <button class="action" id="startAgainBtn">スタート</button>
+        <button class="action secondary" id="soundBtn">音 ON</button>
+      </section>
+    </div>
+
+    <script>
+      const DESTS = [
+        { key: "red", name: "さくら町", color: "#f7b8c4", kana: "あか" },
+        { key: "blue", name: "そら港", color: "#a9dcf0", kana: "あお" },
+        { key: "yellow", name: "ひなた通り", color: "#ffe49a", kana: "きいろ" },
+        { key: "green", name: "みどり丘", color: "#bde6c8", kana: "みどり" },
+      ];
+
+      const state = {
+        running: false,
+        sound: true,
+        score: 0,
+        time: 45,
+        combo: 0,
+        best: Number(localStorage.getItem("postPenguinBest") || 0),
+        current: null,
+        deadline: 0,
+        duration: 2800,
+        loopId: 0,
+      };
+
+      const el = {
+        score: document.getElementById("score"),
+        time: document.getElementById("time"),
+        combo: document.getElementById("combo"),
+        best: document.getElementById("best"),
+        mail: document.getElementById("mail"),
+        slots: document.getElementById("slots"),
+        stage: document.getElementById("stage"),
+        toast: document.getElementById("toast"),
+        overlay: document.getElementById("overlay"),
+        overlayTitle: document.getElementById("overlayTitle"),
+        overlayText: document.getElementById("overlayText"),
+        startBtn: document.getElementById("startBtn"),
+        startAgainBtn: document.getElementById("startAgainBtn"),
+        soundBtn: document.getElementById("soundBtn"),
+        message: document.getElementById("message"),
+        status: document.getElementById("status"),
+      };
+
+      let audioContext = null;
+      let masterGain = null;
+
+      function ensureAudio() {
+        if (audioContext) return;
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = audioContext.createGain();
+        masterGain.gain.value = 0.18;
+        masterGain.connect(audioContext.destination);
+      }
+
+      function tone(freq, dur, delay = 0, type = "triangle", vol = 0.28) {
+        if (!state.sound) return;
+        ensureAudio();
+        const t = audioContext.currentTime + delay;
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        osc.connect(gain);
+        gain.connect(masterGain);
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(vol, t + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+        osc.start(t);
+        osc.stop(t + dur + 0.03);
+      }
+
+      function sfx(kind) {
+        if (kind === "ok") {
+          [660, 880, 1174].forEach((f, i) => tone(f, 0.15, i * 0.045));
+        } else if (kind === "ng") {
+          tone(220, 0.18, 0, "sawtooth", 0.18);
+          tone(150, 0.24, 0.07, "sawtooth", 0.14);
+        } else if (kind === "start") {
+          [523, 659, 784].forEach((f, i) => tone(f, 0.14, i * 0.07));
+        } else if (kind === "over") {
+          [392, 330, 262].forEach((f, i) => tone(f, 0.24, i * 0.1));
+        }
+      }
+
+      function renderSlots() {
+        el.slots.innerHTML = "";
+        DESTS.forEach((dest, index) => {
+          const button = document.createElement("button");
+          button.className = `slot ${dest.key}`;
+          button.type = "button";
+          button.setAttribute("aria-label", `${index + 1}. ${dest.name}`);
+          button.innerHTML = `<span class="key">${index + 1}</span><span class="mark"></span><span>${dest.name}</span>`;
+          button.addEventListener("pointerdown", () => sortTo(dest.key));
+          el.slots.appendChild(button);
+        });
+      }
+
+      function updateHud() {
+        el.score.textContent = state.score.toLocaleString();
+        el.time.textContent = Math.ceil(state.time);
+        el.combo.textContent = state.combo;
+        el.best.textContent = state.best.toLocaleString();
+        el.status.textContent = state.running ? "仕分け中" : "待機中";
+        el.soundBtn.textContent = state.sound ? "音 ON" : "音 OFF";
+      }
+
+      function chooseMail() {
+        state.current = DESTS[Math.floor(Math.random() * DESTS.length)];
+        state.deadline = performance.now() + state.duration;
+        el.mail.style.opacity = "1";
+        el.mail.style.transform = "translate(-50%, -50%) scale(1)";
+        el.mail.style.setProperty("--stamp", state.current.color);
+        el.mail.innerHTML = `
+          <div class="stamp"></div>
+          <div class="address">${state.current.name} 行き</div>
+          <div class="hint">${state.current.kana}のポストへ</div>
+        `;
+      }
+
+      function showToast(text, ok) {
+        el.toast.textContent = text;
+        el.toast.style.background = ok ? "rgba(255,255,255,0.96)" : "rgba(255,232,236,0.96)";
+        el.toast.classList.add("on");
+        clearTimeout(showToast.timer);
+        showToast.timer = setTimeout(() => el.toast.classList.remove("on"), 520);
+      }
+
+      function spark(color) {
+        const rect = el.stage.getBoundingClientRect();
+        for (let i = 0; i < 12; i++) {
+          const dot = document.createElement("span");
+          dot.className = "spark";
+          dot.style.left = `${rect.width / 2 + (Math.random() - 0.5) * 90}px`;
+          dot.style.top = `${rect.height * 0.44 + (Math.random() - 0.5) * 55}px`;
+          dot.style.setProperty("--spark", color);
+          dot.style.setProperty("--dx", `${(Math.random() - 0.5) * 130}px`);
+          dot.style.setProperty("--dy", `${-30 - Math.random() * 90}px`);
+          el.stage.appendChild(dot);
+          dot.addEventListener("animationend", () => dot.remove());
+        }
+      }
+
+      function sortTo(key) {
+        if (!state.running || !state.current) return;
+        const ok = key === state.current.key;
+        if (ok) {
+          state.combo += 1;
+          state.score += 10 + Math.min(20, state.combo * 2);
+          showToast(`正解！ ${state.combo}コンボ`, true);
+          spark(state.current.color);
+          sfx("ok");
+          el.message.textContent = `${state.current.name}へ配達完了。次の便！`;
+        } else {
+          state.combo = 0;
+          state.score = Math.max(0, state.score - 8);
+          showToast("誤配送！", false);
+          sfx("ng");
+          el.message.textContent = `${state.current.name}行きではありません。落ち着いて仕分けよう。`;
+        }
+        state.duration = Math.max(1250, state.duration - 18);
+        chooseMail();
+        updateHud();
+      }
+
+      function missMail() {
+        state.combo = 0;
+        state.score = Math.max(0, state.score - 5);
+        showToast("時間切れ！", false);
+        sfx("ng");
+        el.message.textContent = `${state.current.name}行きが積み残しに。次こそ！`;
+        chooseMail();
+        updateHud();
+      }
+
+      function startGame() {
+        ensureAudio();
+        if (audioContext.state === "suspended") audioContext.resume();
+        cancelAnimationFrame(state.loopId);
+        state.running = true;
+        state.score = 0;
+        state.combo = 0;
+        state.time = 45;
+        state.duration = 2800;
+        el.overlay.classList.remove("on");
+        el.message.textContent = "封筒の行き先と同じポストを選んでください。";
+        chooseMail();
+        updateHud();
+        sfx("start");
+        state.loopId = requestAnimationFrame(loop);
+      }
+
+      function endGame() {
+        state.running = false;
+        state.current = null;
+        cancelAnimationFrame(state.loopId);
+        if (state.score > state.best) {
+          state.best = state.score;
+          localStorage.setItem("postPenguinBest", String(state.best));
+        }
+        el.overlayTitle.textContent = "本日の配達完了";
+        el.overlayText.textContent = `スコア ${state.score.toLocaleString()} / ベスト ${state.best.toLocaleString()}。もう一便いきますか？`;
+        el.startBtn.textContent = "もう一回";
+        el.overlay.classList.add("on");
+        el.message.textContent = "おつかれさま！ペンギン局員も満足そうです。";
+        el.mail.style.opacity = "0";
+        updateHud();
+        sfx("over");
+      }
+
+      function loop(now) {
+        if (!state.running) return;
+        state.time -= 1 / 60;
+        const remain = Math.max(0, (state.deadline - now) / state.duration);
+        el.mail.style.transform = `translate(-50%, -50%) scale(${0.92 + remain * 0.08})`;
+        if (now > state.deadline) missMail();
+        if (state.time <= 0) {
+          state.time = 0;
+          updateHud();
+          endGame();
+          return;
+        }
+        updateHud();
+        state.loopId = requestAnimationFrame(loop);
+      }
+
+      window.addEventListener("keydown", (event) => {
+        const index = Number(event.key) - 1;
+        if (index >= 0 && index < DESTS.length) {
+          event.preventDefault();
+          sortTo(DESTS[index].key);
+        }
+        if (event.key === "Enter" && !state.running) startGame();
+      });
+
+      el.startBtn.addEventListener("click", startGame);
+      el.startAgainBtn.addEventListener("click", startGame);
+      el.soundBtn.addEventListener("click", () => {
+        state.sound = !state.sound;
+        if (state.sound) {
+          ensureAudio();
+          if (audioContext.state === "suspended") audioContext.resume();
+          sfx("ok");
+        }
+        updateHud();
+      });
+
+      renderSlots();
+      updateHud();
+      chooseMail();
+    </script>
+  </body>
+</html>

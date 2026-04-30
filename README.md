@@ -16,6 +16,7 @@ After deploying GitHub Pages, open:
 - Top page: `https://hirakumori.github.io/hakai-games/`
 - Penguin Blocks: `https://hirakumori.github.io/hakai-games/games/penguin-blocks/`
 - 21 or Curse: `https://hirakumori.github.io/hakai-games/games/21-or-curse/`
+- 郵便ペンギン仕分け便: `https://hirakumori.github.io/hakai-games/games/post-penguin-sorter/`
 
 ## GitHub Pages
 
