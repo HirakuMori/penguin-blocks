@@ -26,6 +26,7 @@
       .fx{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:44px;font-weight:900;color:#53a8d8;opacity:0;pointer-events:none}
       .fx.show{animation:pop .55s ease}
       @keyframes pop{0%{opacity:0;transform:translate(-50%,-30%) scale(.4)}35%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}100%{opacity:0;transform:translate(-50%,-70%) scale(1)}}
+      .gameover{position:absolute;inset:10px;border-radius:10px;background:rgba(31,59,83,.78);display:none;align-items:center;justify-content:center;text-align:center;color:#fff;font-size:44px;font-weight:900;letter-spacing:.06em;text-shadow:0 3px 0 rgba(0,0,0,.18);pointer-events:none}.gameover.show{display:flex}
       .mode{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid #cfe2ec;border-radius:14px;padding:8px 10px;margin-top:8px;font-weight:700}
       .mode button{min-width:92px;padding:8px 12px;border-radius:999px;border:1px solid #cfe2ec;background:#f7fbfd;font-weight:800;color:#1f3b53}
       .mode button.on{background:#4cc0b6;border-color:#33a69d;color:#fff}
@@ -43,17 +44,17 @@
         <button class="btn" id="pauseBtn">⏸</button>
       </div>
       <div class="goal" id="goal">目標: 128タイルを作る</div>
-      <div class="board" id="board"><div class="grid" id="grid"></div><div class="path" id="path"></div><div class="fx" id="fx"></div></div>
+      <div class="board" id="board"><div class="grid" id="grid"></div><div class="path" id="path"></div><div class="fx" id="fx"></div><div class="gameover" id="gameover">GAME OVER</div></div>
       <div class="mode"><span>手数無限モード</span><button id="modeBtn" type="button">OFF</button></div>
       <div class="tools"><button id="retryBtn">↻ リトライ</button><button id="hintBtn">? ヒント</button></div>
       <div class="note" id="note">同じ数字を2個以上なぞって離すと、最後のマスで+1に合体します。</div>
       <a class="back" href="../../index.html">ゲーム一覧へ戻る</a>
     </div>
     <script>
-      const SIZE=5,START_MOVES=20;const gridEl=document.getElementById('grid'),boardEl=document.getElementById('board'),pathEl=document.getElementById('path'),movesEl=document.getElementById('moves'),scoreEl=document.getElementById('score'),noteEl=document.getElementById('note'),goalEl=document.getElementById('goal'),fxEl=document.getElementById('fx'),modeBtn=document.getElementById('modeBtn');
+      const SIZE=5,START_MOVES=20;const gridEl=document.getElementById('grid'),boardEl=document.getElementById('board'),pathEl=document.getElementById('path'),movesEl=document.getElementById('moves'),scoreEl=document.getElementById('score'),noteEl=document.getElementById('note'),goalEl=document.getElementById('goal'),fxEl=document.getElementById('fx'),overEl=document.getElementById('gameover'),modeBtn=document.getElementById('modeBtn');
       const st={grid:[],moves:START_MOVES,infiniteMoves:localStorage.getItem('loopForgeInfiniteMoves')==='1',score:0,paused:false,done:false,animating:false,animId:0,path:[],target:128,best:Number(localStorage.getItem('loopForgeBest')||0)};
       function randBase(){return 1+Math.floor(Math.random()*4)}
-      function init(){st.animId++;st.grid=Array.from({length:SIZE},()=>Array.from({length:SIZE},randBase));st.moves=START_MOVES;st.score=0;st.done=false;st.paused=false;st.animating=false;st.path=[];updateHud();render();note('ループを描いて大連鎖を狙おう。')}
+      function init(){st.animId++;st.grid=Array.from({length:SIZE},()=>Array.from({length:SIZE},randBase));st.moves=START_MOVES;st.score=0;st.done=false;st.paused=false;st.animating=false;st.path=[];overEl.classList.remove('show');updateHud();render();note('ループを描いて大連鎖を狙おう。');checkEnd()}
       function note(t){noteEl.textContent=t}
       function updateHud(){movesEl.textContent=st.infiniteMoves?'∞':st.moves;scoreEl.textContent=st.score;goalEl.textContent=`目標: ${st.target}タイルを作る / BEST ${st.best}`;modeBtn.textContent=st.infiniteMoves?'ON':'OFF';modeBtn.classList.toggle('on',st.infiniteMoves)}
       function cls(n){return `n${Math.min(8,n)}`}
@@ -74,7 +75,8 @@
       function showFx(t){fxEl.textContent=t;fxEl.classList.remove('show');void fxEl.offsetWidth;fxEl.classList.add('show')}
       function maxTile(){return Math.max(...st.grid.flat())}
       function hasMove(){for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){if(r+1<SIZE&&st.grid[r][c]===st.grid[r+1][c])return true;if(c+1<SIZE&&st.grid[r][c]===st.grid[r][c+1])return true;}return false}
-      function checkEnd(){if(maxTile()>=st.target){st.done=true;note('クリア！リトライで再挑戦できます。');return;}if((!st.infiniteMoves&&st.moves<=0)||!hasMove()){st.done=true;note('ゲーム終了！リトライで再挑戦。');}}
+      function finish(label,msg){st.done=true;overEl.textContent=label;overEl.classList.add('show');note(msg)}
+      function checkEnd(){if(maxTile()>=st.target){finish('CLEAR!','クリア！リトライで再挑戦できます。');return;}if(!hasMove()){finish('GAME OVER','詰みです。同じ数字が隣り合っていません。リトライで再挑戦。');return;}if(!st.infiniteMoves&&st.moves<=0){finish('GAME OVER','手数切れです。リトライで再挑戦。');}}
       let drawing=false;
       boardEl.addEventListener('pointerdown',e=>{if(st.paused||st.done||st.animating)return;const c=cellFromEvent(e);if(!c)return;e.preventDefault();drawing=true;st.path=[c];drawPath();boardEl.setPointerCapture(e.pointerId)});
       boardEl.addEventListener('pointermove',e=>{if(!drawing||st.paused||st.done||st.animating)return;const c=cellFromEvent(e);if(!c)return;if(pushPath(c)){drawPath();}});
