@@ -8,7 +8,7 @@
       :root{--ivory:#f7f6f2;--sky:#aee2f7;--teal:#4cc0b6;--lemon:#ffe082;--coral:#ff8e7a;--slate:#64748b;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif}
       body{margin:0;background:linear-gradient(#f8fdff,#edf8fb);color:#1f3b53}
       .app{max-width:540px;margin:0 auto;padding:14px}
-      .hud{display:grid;grid-template-columns:1fr 1fr 56px;gap:8px;align-items:center;margin-bottom:10px}
+      .hud{display:grid;grid-template-columns:1fr 1fr 56px 56px;gap:8px;align-items:center;margin-bottom:10px}
       .panel{background:#fff;border:1px solid #cfe2ec;border-radius:14px;padding:8px 10px;text-align:center}
       .label{font-size:12px;color:#507086}.value{font-size:34px;font-weight:800;line-height:1}
       .sub{font-size:12px}.btn{height:56px;border:none;border-radius:14px;background:#fff;border:1px solid #cfe2ec;font-size:24px}
@@ -42,6 +42,7 @@
         <div class="panel"><div class="label">手数</div><div class="value" id="moves">20</div></div>
         <div class="panel"><div class="label">スコア</div><div class="value" id="score">0</div></div>
         <button class="btn" id="pauseBtn">⏸</button>
+        <button class="btn" id="soundBtn">♪</button>
       </div>
       <div class="goal" id="goal">目標: 128タイルを作る</div>
       <div class="board" id="board"><div class="grid" id="grid"></div><div class="path" id="path"></div><div class="fx" id="fx"></div><div class="gameover" id="gameover">GAME OVER</div></div>
@@ -51,12 +52,12 @@
       <a class="back" href="../../index.html">ゲーム一覧へ戻る</a>
     </div>
     <script>
-      const SIZE=5,START_MOVES=20;const gridEl=document.getElementById('grid'),boardEl=document.getElementById('board'),pathEl=document.getElementById('path'),movesEl=document.getElementById('moves'),scoreEl=document.getElementById('score'),noteEl=document.getElementById('note'),goalEl=document.getElementById('goal'),fxEl=document.getElementById('fx'),overEl=document.getElementById('gameover'),modeBtn=document.getElementById('modeBtn');
-      const st={grid:[],moves:START_MOVES,infiniteMoves:localStorage.getItem('loopForgeInfiniteMoves')==='1',score:0,paused:false,done:false,animating:false,animId:0,path:[],target:128,best:Number(localStorage.getItem('loopForgeBest')||0)};
+      const SIZE=5,START_MOVES=20;const gridEl=document.getElementById('grid'),boardEl=document.getElementById('board'),pathEl=document.getElementById('path'),movesEl=document.getElementById('moves'),scoreEl=document.getElementById('score'),noteEl=document.getElementById('note'),goalEl=document.getElementById('goal'),fxEl=document.getElementById('fx'),overEl=document.getElementById('gameover'),modeBtn=document.getElementById('modeBtn'),soundBtn=document.getElementById('soundBtn');
+      const st={grid:[],moves:START_MOVES,infiniteMoves:localStorage.getItem('loopForgeInfiniteMoves')==='1',score:0,paused:false,done:false,animating:false,animId:0,path:[],target:128,best:Number(localStorage.getItem('loopForgeBest')||0),sound:localStorage.getItem('loopForgeSound')!=='0'};
       function randBase(){return 1+Math.floor(Math.random()*4)}
       function init(){st.animId++;st.grid=Array.from({length:SIZE},()=>Array.from({length:SIZE},randBase));st.moves=START_MOVES;st.score=0;st.done=false;st.paused=false;st.animating=false;st.path=[];overEl.classList.remove('show');updateHud();render();note('ループを描いて大連鎖を狙おう。');checkEnd()}
       function note(t){noteEl.textContent=t}
-      function updateHud(){movesEl.textContent=st.infiniteMoves?'∞':st.moves;scoreEl.textContent=st.score;goalEl.textContent=`目標: ${st.target}タイルを作る / BEST ${st.best}`;modeBtn.textContent=st.infiniteMoves?'ON':'OFF';modeBtn.classList.toggle('on',st.infiniteMoves)}
+      function updateHud(){movesEl.textContent=st.infiniteMoves?'∞':st.moves;scoreEl.textContent=st.score;goalEl.textContent=`目標: ${st.target}タイルを作る / BEST ${st.best}`;modeBtn.textContent=st.infiniteMoves?'ON':'OFF';modeBtn.classList.toggle('on',st.infiniteMoves);soundBtn.textContent=st.sound?'♪':'×';soundBtn.style.opacity=st.sound?1:.45}
       function cls(n){return `n${Math.min(8,n)}`}
       function render(){gridEl.innerHTML='';for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){const d=document.createElement('div');d.className=`cell ${cls(st.grid[r][c])}`;d.dataset.r=r;d.dataset.c=c;d.textContent=st.grid[r][c];gridEl.appendChild(d);}drawPath()}
       function cellFromElement(el){const t=el&&el.closest&&el.closest('.cell');if(!t||!gridEl.contains(t))return null;return {r:+t.dataset.r,c:+t.dataset.c,val:st.grid[+t.dataset.r][+t.dataset.c]}}
@@ -67,24 +68,36 @@
       const wait=ms=>new Promise(r=>setTimeout(r,ms));
       function cellEl(p){return gridEl.children[p.r*SIZE+p.c]}
       function setCellValue(el,n){el.className=`cell ${cls(n)}`;el.textContent=n}
+      let actx=null,masterGain=null,bgm=null;
+      function ensureAudio(){if(actx)return;actx=new (window.AudioContext||window.webkitAudioContext)();masterGain=actx.createGain();masterGain.gain.value=.16;masterGain.connect(actx.destination)}
+      function unlockAudio(){if(!st.sound)return;ensureAudio();if(actx.state==='suspended')actx.resume();startBGM()}
+      function setSound(on){st.sound=on;localStorage.setItem('loopForgeSound',on?'1':'0');updateHud();if(on)unlockAudio();else stopBGM()}
+      function tone(f,t,d=.12,type='triangle',vol=.25,out=masterGain){const g=actx.createGain(),o=actx.createOscillator();o.type=type;o.frequency.value=f;o.connect(g);g.connect(out);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+d);o.start(t);o.stop(t+d+.03);return o}
+      function noise(t,d=.07,vol=.08){const b=actx.createBuffer(1,Math.max(1,d*actx.sampleRate|0),actx.sampleRate),c=b.getChannelData(0);for(let i=0;i<c.length;i++)c[i]=Math.random()*2-1;const s=actx.createBufferSource(),hp=actx.createBiquadFilter(),g=actx.createGain();s.buffer=b;hp.type='highpass';hp.frequency.value=5200;s.connect(hp);hp.connect(g);g.connect(masterGain);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+d);s.start(t);s.stop(t+d+.02)}
+      function sfx(k,n=1){if(!st.sound)return;ensureAudio();const t=actx.currentTime;if(k==='tap'){tone(420+n*26,t,.05,'sine',.09)}else if(k==='back'){tone(310,t,.06,'sine',.08)}else if(k==='fall'){tone(190,t,.11,'sine',.14);tone(135,t+.035,.14,'triangle',.08)}else if(k==='win'){[523,659,784,1046,1318].forEach((f,i)=>tone(f,t+i*.08,.34,'triangle',.24))}else if(k==='over'){[392,330,262,196].forEach((f,i)=>tone(f,t+i*.12,.36,'triangle',.22))}}
+      function comboSfx(cleared,up){if(!st.sound)return;ensureAudio();const t=actx.currentTime,rank=Math.min(5,Math.max(0,cleared-1)),root=220*Math.pow(2,Math.min(5,up)/12),scale=rank<2?[0,3,7]:rank<4?[0,3,7,10,12]:[0,3,7,10,12,15,19];scale.forEach((m,i)=>tone(root*Math.pow(2,m/12),t+i*(.055-.006*rank),.22+.035*rank,rank>=4?'sawtooth':'triangle',.16+.025*rank));if(rank>=3)noise(t+.12,.09,.07);if(rank>=5){tone(root*4,t+.28,.42,'square',.13);noise(t+.26,.16,.1)}}
+      function bgmMood(){const k=Math.min(1,Math.max(0,(maxTile()-4)/12));return{tempo:360-150*k,base:52+(k>.65?-2:0),type:k>.55?'sawtooth':'triangle',gain:.07+.025*k,hat:k>.45,pat:k>.75?[0,3,6,3,10,6,8,3,0,3,7,10,12,10,7,3]:[0,3,7,10,7,3,5,8,0,3,7,12,10,7,5,3]}}
+      function startBGM(){if(bgm||!st.sound)return;ensureAudio();const out=actx.createGain(),filter=actx.createBiquadFilter();out.gain.value=.75;filter.type='lowpass';filter.frequency.value=1600;filter.connect(out);out.connect(masterGain);let i=0;const hz=m=>440*Math.pow(2,(m-69)/12),step=()=>{if(!bgm)return;if(st.paused||st.done){bgm.to=setTimeout(step,90);return}const p=bgmMood(),t=actx.currentTime,m=p.base+p.pat[i%p.pat.length];filter.frequency.setTargetAtTime(1800-650*Math.min(1,(maxTile()-4)/12),t,.2);tone(hz(m),t,.28,p.type,p.gain,filter);if(i%4===0)tone(hz(p.base-12+(i%8?7:0)),t,.46,'sine',.08,out);if(p.hat&&i%2)noise(t,.04,.025);i++;bgm.to=setTimeout(step,p.tempo)};bgm={out,filter,to:null};step()}
+      function stopBGM(){if(!bgm)return;clearTimeout(bgm.to);try{bgm.out.disconnect();bgm.filter.disconnect()}catch(e){}bgm=null}
       function fallState(src){const next=Array.from({length:SIZE},()=>Array(SIZE).fill(0)),orig=Array.from({length:SIZE},()=>Array(SIZE).fill(null));for(let c=0;c<SIZE;c++){let write=SIZE-1;for(let r=SIZE-1;r>=0;r--)if(src[r][c]>0){next[write][c]=src[r][c];orig[write][c]={fromR:r};write--}let spawn=0;for(let r=write;r>=0;r--){next[r][c]=randBase();orig[r][c]={fromR:-1-spawn};spawn++}}return{next,orig}}
       async function animateFall(next,orig,id){st.grid=next;render();const first=gridEl.children[0],second=gridEl.children[SIZE],pitch=second.getBoundingClientRect().top-first.getBoundingClientRect().top;[...gridEl.children].forEach((el,i)=>{const r=Math.floor(i/SIZE),o=orig[r][i%SIZE];if(!o)return;const dy=(o.fromR-r)*pitch;el.style.transition='none';el.style.transform=`translateY(${dy}px)`;el.style.opacity=o.fromR<0?'0':'1'});await wait(20);if(id!==st.animId)return;[...gridEl.children].forEach(el=>{el.style.transition='transform .34s cubic-bezier(.2,.9,.25,1), opacity .24s ease';el.style.transform='translateY(0)';el.style.opacity='1'});await wait(380);if(id!==st.animId)return;[...gridEl.children].forEach(el=>{el.style.transition='';el.style.transform='';el.style.opacity=''})}
-      async function resolvePath(){if(st.path.length<2){st.path=[];drawPath();return;}const id=++st.animId;st.animating=true;const path=st.path.map(p=>({...p})),base=path[0].val,last=path[path.length-1],up=base+1;st.path=[];drawPath();path.slice(0,-1).forEach(p=>cellEl(p).classList.add('vanish'));await wait(150);if(id!==st.animId)return;const lastEl=cellEl(last);setCellValue(lastEl,up);lastEl.classList.add('merge');showFx(`+${up}`);await wait(260);if(id!==st.animId)return;const cleared=st.grid.map(row=>row.slice());for(let i=0;i<path.length-1;i++){const p=path[i];cleared[p.r][p.c]=0}cleared[last.r][last.c]=up;const gained=path.length*(base*10)+Math.max(0,path.length-3)*15;st.score+=gained;if(!st.infiniteMoves)st.moves--;if(up>st.best){st.best=up;localStorage.setItem('loopForgeBest',String(st.best))}updateHud();const built=fallState(cleared);await animateFall(built.next,built.orig,id);if(id!==st.animId)return;st.animating=false;checkEnd();}
+      async function resolvePath(){if(st.path.length<2){st.path=[];drawPath();return;}const id=++st.animId;st.animating=true;const path=st.path.map(p=>({...p})),base=path[0].val,last=path[path.length-1],up=base+1,clearedCount=path.length-1;st.path=[];drawPath();path.slice(0,-1).forEach(p=>cellEl(p).classList.add('vanish'));comboSfx(clearedCount,up);await wait(150);if(id!==st.animId)return;const lastEl=cellEl(last);setCellValue(lastEl,up);lastEl.classList.add('merge');showFx(`+${up}`);await wait(260);if(id!==st.animId)return;const cleared=st.grid.map(row=>row.slice());for(let i=0;i<path.length-1;i++){const p=path[i];cleared[p.r][p.c]=0}cleared[last.r][last.c]=up;const gained=path.length*(base*10)+Math.max(0,path.length-3)*15;st.score+=gained;if(!st.infiniteMoves)st.moves--;if(up>st.best){st.best=up;localStorage.setItem('loopForgeBest',String(st.best))}updateHud();const built=fallState(cleared);await animateFall(built.next,built.orig,id);sfx('fall');if(id!==st.animId)return;st.animating=false;checkEnd();}
       function collapse(){for(let c=0;c<SIZE;c++){let write=SIZE-1;for(let r=SIZE-1;r>=0;r--){if(st.grid[r][c]>0){const v=st.grid[r][c];st.grid[r][c]=0;st.grid[write][c]=v;write--;}}}}
       function refill(){for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++)if(st.grid[r][c]===0)st.grid[r][c]=randBase()}
       function showFx(t){fxEl.textContent=t;fxEl.classList.remove('show');void fxEl.offsetWidth;fxEl.classList.add('show')}
       function maxTile(){return Math.max(...st.grid.flat())}
       function hasMove(){for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){if(r+1<SIZE&&st.grid[r][c]===st.grid[r+1][c])return true;if(c+1<SIZE&&st.grid[r][c]===st.grid[r][c+1])return true;}return false}
-      function finish(label,msg){st.done=true;overEl.textContent=label;overEl.classList.add('show');note(msg)}
+      function finish(label,msg){st.done=true;overEl.textContent=label;overEl.classList.add('show');note(msg);stopBGM();sfx(label==='CLEAR!'?'win':'over')}
       function checkEnd(){if(maxTile()>=st.target){finish('CLEAR!','クリア！リトライで再挑戦できます。');return;}if(!hasMove()){finish('GAME OVER','詰みです。同じ数字が隣り合っていません。リトライで再挑戦。');return;}if(!st.infiniteMoves&&st.moves<=0){finish('GAME OVER','手数切れです。リトライで再挑戦。');}}
       let drawing=false;
-      boardEl.addEventListener('pointerdown',e=>{if(st.paused||st.done||st.animating)return;const c=cellFromEvent(e);if(!c)return;e.preventDefault();drawing=true;st.path=[c];drawPath();boardEl.setPointerCapture(e.pointerId)});
-      boardEl.addEventListener('pointermove',e=>{if(!drawing||st.paused||st.done||st.animating)return;const c=cellFromEvent(e);if(!c)return;if(pushPath(c)){drawPath();}});
+      boardEl.addEventListener('pointerdown',e=>{unlockAudio();if(st.paused||st.done||st.animating)return;const c=cellFromEvent(e);if(!c)return;e.preventDefault();drawing=true;st.path=[c];sfx('tap',1);drawPath();boardEl.setPointerCapture(e.pointerId)});
+      boardEl.addEventListener('pointermove',e=>{if(!drawing||st.paused||st.done||st.animating)return;const c=cellFromEvent(e);if(!c)return;const before=st.path.length;if(pushPath(c)){sfx(st.path.length<before?'back':'tap',st.path.length);drawPath();}});
       boardEl.addEventListener('pointerup',()=>{if(!drawing)return;drawing=false;resolvePath();});
       boardEl.addEventListener('pointercancel',()=>{drawing=false;st.path=[];drawPath();});
-      document.getElementById('retryBtn').addEventListener('click',init);
-      modeBtn.addEventListener('click',()=>{st.infiniteMoves=!st.infiniteMoves;localStorage.setItem('loopForgeInfiniteMoves',st.infiniteMoves?'1':'0');init();note(st.infiniteMoves?'手数無限モードで開始しました。':'通常モードで開始しました。')});
-      document.getElementById('pauseBtn').addEventListener('click',e=>{st.paused=!st.paused;e.currentTarget.textContent=st.paused?'▶':'⏸';note(st.paused?'一時停止中':'再開')});
+      document.getElementById('retryBtn').addEventListener('click',()=>{unlockAudio();init()});
+      modeBtn.addEventListener('click',()=>{unlockAudio();st.infiniteMoves=!st.infiniteMoves;localStorage.setItem('loopForgeInfiniteMoves',st.infiniteMoves?'1':'0');init();note(st.infiniteMoves?'手数無限モードで開始しました。':'通常モードで開始しました。')});
+      soundBtn.addEventListener('click',()=>setSound(!st.sound));
+      document.getElementById('pauseBtn').addEventListener('click',e=>{unlockAudio();st.paused=!st.paused;e.currentTarget.textContent=st.paused?'▶':'⏸';note(st.paused?'一時停止中':'再開')});
       document.getElementById('hintBtn').addEventListener('click',()=>note('同じ数字が密集している場所を短く往復して、次ターンの種を作ると連鎖しやすいです。'));
       init();
     </script>
