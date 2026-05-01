@@ -16,7 +16,7 @@ This is a solo hobby repo — **commit and push directly to `main`**. Don't open
 
 ### GitHub authentication in Codex
 
-This repo is under `~/private-projects`, where GitHub credentials for `HirakuMori` are supplied by the parent `.envrc` as `GH_TOKEN`. In Codex's non-interactive shell, direnv is not always auto-loaded, so plain `gh` / `git push` may fall back to the machine-wide `gh auth` active account from the keyring (for example `L7-admin`).
+This repo is under `~/private-projects`, where GitHub credentials for `HirakuMori` are supplied by the parent `.envrc` as `GH_TOKEN`. In Codex's non-interactive shell, direnv is not always auto-loaded, so plain `gh` / `git push` may fall back to another machine-wide `gh auth` active account from the keyring.
 
 For any GitHub-authenticated command in this repo, especially `git push` and `gh ...`, run it through direnv:
 
