@@ -66,6 +66,8 @@ python3 -m http.server --directory docs 8000
 
 - コミットは小さく、メッセージは英語で要点 + （日本語 description でも可）
 - `main` に直接 push する（hobby repo なので PR は不要、ユーザーが明示要求した時のみ PR）
+- この repo の GitHub 認証は `~/private-projects/.envrc` の `GH_TOKEN` 経由で `HirakuMori` を使う。Codex の通常 shell では direnv が自動ロードされないことがあるため、push や `gh ...` は `direnv exec . git push` / `direnv exec . gh ...` のように実行する
+- token 値は表示しない。確認が必要な場合は `GH_TOKEN` が set/non-empty かだけを見る
 
 ## やってはいけないこと
 

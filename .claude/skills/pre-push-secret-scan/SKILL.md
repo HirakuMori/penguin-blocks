@@ -18,6 +18,19 @@ This repository (`hakai-games`) is **public** and `main` deploys to GitHub Pages
 
 If you are about to run a push and have not run this skill in the current turn, run it first.
 
+## GitHub auth note
+
+This repo lives under `~/private-projects`, where `HirakuMori` GitHub auth is supplied by the parent `.envrc` as `GH_TOKEN`. Codex's non-interactive shell may not auto-load direnv, so plain `git push` / `gh ...` can fall back to the machine-wide `gh auth` active account from the keyring.
+
+After this scan passes, run GitHub-authenticated commands through direnv:
+
+```sh
+direnv exec . git push
+direnv exec . gh auth status
+```
+
+Never print the token value. If needed, only verify that `GH_TOKEN` is set/non-empty.
+
 ## What to scan
 
 Scan the **delta that is about to enter `origin`**, not the entire tree:

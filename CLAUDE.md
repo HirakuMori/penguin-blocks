@@ -14,6 +14,19 @@ Pages is configured to deploy from the `main` branch with root `/docs`. Anything
 
 This is a solo hobby repo — **commit and push directly to `main`**. Don't open PRs or feature branches unless the user explicitly asks. Each push to `main` is a deploy, so make sure the change actually works (open the affected page locally) before pushing.
 
+### GitHub authentication in Codex
+
+This repo is under `~/private-projects`, where GitHub credentials for `HirakuMori` are supplied by the parent `.envrc` as `GH_TOKEN`. In Codex's non-interactive shell, direnv is not always auto-loaded, so plain `gh` / `git push` may fall back to the machine-wide `gh auth` active account from the keyring (for example `L7-admin`).
+
+For any GitHub-authenticated command in this repo, especially `git push` and `gh ...`, run it through direnv:
+
+```sh
+direnv exec . git push
+direnv exec . gh auth status
+```
+
+Do not print or inspect the token value. It is enough to verify whether `GH_TOKEN` is set/non-empty.
+
 ## Commands
 
 There is no toolchain. To preview locally, serve `docs/` with any static server, e.g.:
