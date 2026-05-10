@@ -19,6 +19,7 @@ After deploying GitHub Pages, open:
 - 郵便ペンギン仕分け便: `https://hirakumori.github.io/hakai-games/games/post-penguin-sorter/`
 - プラント・マージ・カスケード: `https://hirakumori.github.io/hakai-games/games/plant-merge-cascade/`
 - 逆さ文字ハンター: `https://hirakumori.github.io/hakai-games/games/upside-down-hunter/`
+- 月夜のトランプ決闘: `https://hirakumori.github.io/hakai-games/games/moonlit-trump-duel/`
 
 ## GitHub Pages
 
