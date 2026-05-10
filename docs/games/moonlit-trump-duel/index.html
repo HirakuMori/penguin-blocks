@@ -3,22 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>月夜のトランプ決闘</title>
+    <title>月夜の札合わせ決闘</title>
     <style>
       :root { font-family: "Hiragino Kaku Gothic ProN", sans-serif; color: #f2f7ff; background: #0c1733; }
       * { box-sizing: border-box; }
       body { margin: 0; min-height: 100vh; padding: 16px; background: radial-gradient(circle at top, #243f87, #0a1227 70%); }
-      .wrap { max-width: 680px; margin: 0 auto; }
+      .wrap { max-width: 760px; margin: 0 auto; }
       h1 { margin: 0 0 8px; font-size: 1.7rem; }
       .desc { margin: 0 0 12px; color: #c8d7ff; line-height: 1.5; }
       .hud { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
       .panel { background: #101f46; border: 2px solid #6b8ee8; border-radius: 12px; padding: 10px; }
       .panel strong { display: block; font-size: 1.2rem; margin-top: 4px; }
       .arena { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-      .card { background: #f9fbff; color: #102b68; min-height: 150px; border-radius: 14px; border: 3px solid #b5c8ff; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: 700; }
-      .card .suit { font-size: 2rem; }
-      .card .rank { font-size: 2.8rem; line-height: 1; }
+      .card { background: #f9fbff; color: #102b68; min-height: 150px; border-radius: 14px; border: 3px solid #b5c8ff; padding: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: 700; text-align: center; }
+      .card .month { font-size: 1.4rem; }
+      .card .name { font-size: 1.2rem; line-height: 1.4; }
+      .card .kind { margin-top: 6px; font-size: 0.95rem; padding: 4px 10px; border-radius: 999px; background: #e1eaff; }
       .face-down { background: repeating-linear-gradient(45deg,#21418f,#21418f 12px,#3058b8 12px,#3058b8 24px); color: #e7eeff; }
+      .table-zone { margin-top: 14px; }
+      .table-cards { display: grid; grid-template-columns: repeat(4, minmax(100px, 1fr)); gap: 8px; }
+      .table-card { min-height: 90px; border-radius: 10px; border: 2px solid #7ba0ff; background: #102657; padding: 8px; font-size: 0.9rem; }
       .controls { margin-top: 14px; display: grid; gap: 8px; }
       button, a.back { border: none; border-radius: 999px; padding: 12px 16px; font-size: 1rem; font-weight: 700; }
       button { background: #ffd553; color: #412d00; touch-action: manipulation; }
@@ -26,119 +30,132 @@
       #message { background: #0f214f; border: 1px solid #5c80df; border-radius: 10px; padding: 10px; min-height: 52px; }
       .back { display: inline-block; margin-top: 14px; text-decoration: none; background: #d5e4ff; color: #102b68; text-align: center; }
       @media (max-width: 520px) {
-        .arena { grid-template-columns: 1fr; }
-        .hud { grid-template-columns: 1fr; }
+        .arena, .hud { grid-template-columns: 1fr; }
+        .table-cards { grid-template-columns: repeat(2, minmax(100px, 1fr)); }
       }
     </style>
   </head>
   <body>
     <main class="wrap">
-      <h1>月夜のトランプ決闘</h1>
-      <p class="desc">3ラウンドで相手より大きいカードを出せ！ 先に2勝したほうが勝ち。ジョーカーは最強、Aは2より強い特別札です。</p>
+      <h1>月夜の札合わせ決闘</h1>
+      <p class="desc">花札風ルールの5本勝負。場札と同じ月の札を引けたら獲得。光=5点、タネ=3点、短冊=2点、カス=1点。最後に合計点が高い方の勝ち。</p>
 
       <section class="hud">
-        <div class="panel">あなたの勝利数<strong id="player-score">0</strong></div>
-        <div class="panel">相手の勝利数<strong id="enemy-score">0</strong></div>
+        <div class="panel">あなたの得点<strong id="player-score">0</strong></div>
+        <div class="panel">相手の得点<strong id="enemy-score">0</strong></div>
       </section>
 
       <section class="arena">
-        <article class="card" id="player-card"><div class="suit">?</div><div class="rank">?</div></article>
-        <article class="card face-down" id="enemy-card"><div class="suit">🂠</div><div class="rank">?</div></article>
+        <article class="card" id="player-card"><div class="month">あなた</div><div class="name">?</div><div class="kind">-</div></article>
+        <article class="card face-down" id="enemy-card"><div class="month">相手</div><div class="name">伏せ札</div><div class="kind">?</div></article>
+      </section>
+
+      <section class="table-zone">
+        <h2>場札</h2>
+        <div class="table-cards" id="table-cards"></div>
       </section>
 
       <div class="controls">
-        <button id="draw-btn">カードを引く</button>
-        <button id="next-btn" disabled>次のラウンドへ</button>
-        <div id="message">「カードを引く」を押して決闘開始！</div>
+        <button id="play-btn">札を出す</button>
+        <div id="message">「札を出す」で勝負開始！</div>
       </div>
 
       <a class="back" href="../../index.html">← 一覧に戻る</a>
     </main>
 
     <script>
-      const suits = ["♠", "♥", "♦", "♣"];
-      const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A", "JOKER"];
-      const valueMap = {"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,"J":11,"Q":12,"K":13,"A":14,"JOKER":15};
+      const cardPool = [
+        { month: 1, name: "松に鶴", kind: "光", point: 5 }, { month: 1, name: "松の短冊", kind: "短冊", point: 2 },
+        { month: 2, name: "梅に鶯", kind: "タネ", point: 3 }, { month: 2, name: "梅の短冊", kind: "短冊", point: 2 },
+        { month: 3, name: "桜に幕", kind: "光", point: 5 }, { month: 3, name: "桜のカス", kind: "カス", point: 1 },
+        { month: 4, name: "藤に不如帰", kind: "タネ", point: 3 }, { month: 4, name: "藤のカス", kind: "カス", point: 1 },
+        { month: 5, name: "菖蒲に八橋", kind: "タネ", point: 3 }, { month: 5, name: "菖蒲の短冊", kind: "短冊", point: 2 },
+        { month: 6, name: "牡丹に蝶", kind: "タネ", point: 3 }, { month: 6, name: "牡丹のカス", kind: "カス", point: 1 },
+        { month: 7, name: "萩に猪", kind: "タネ", point: 3 }, { month: 7, name: "萩の短冊", kind: "短冊", point: 2 },
+        { month: 8, name: "芒に月", kind: "光", point: 5 }, { month: 8, name: "芒に雁", kind: "タネ", point: 3 },
+        { month: 9, name: "菊に盃", kind: "タネ", point: 3 }, { month: 9, name: "菊の短冊", kind: "短冊", point: 2 },
+        { month: 10, name: "紅葉に鹿", kind: "タネ", point: 3 }, { month: 10, name: "紅葉の短冊", kind: "短冊", point: 2 },
+        { month: 11, name: "柳に小野道風", kind: "光", point: 5 }, { month: 11, name: "柳に燕", kind: "タネ", point: 3 },
+        { month: 12, name: "桐に鳳凰", kind: "光", point: 5 }, { month: 12, name: "桐のカス", kind: "カス", point: 1 }
+      ];
 
       const playerCardEl = document.getElementById("player-card");
       const enemyCardEl = document.getElementById("enemy-card");
       const messageEl = document.getElementById("message");
-      const drawBtn = document.getElementById("draw-btn");
-      const nextBtn = document.getElementById("next-btn");
+      const playBtn = document.getElementById("play-btn");
       const playerScoreEl = document.getElementById("player-score");
       const enemyScoreEl = document.getElementById("enemy-score");
+      const tableCardsEl = document.getElementById("table-cards");
 
       let round = 1;
       let playerScore = 0;
       let enemyScore = 0;
-      let roundDone = false;
+      let tableCards = [];
 
-      function randomCard() {
-        const rank = ranks[Math.floor(Math.random() * ranks.length)];
-        const suit = rank === "JOKER" ? "★" : suits[Math.floor(Math.random() * suits.length)];
-        return { rank, suit, value: valueMap[rank] };
-      }
+      const drawCard = () => ({ ...cardPool[Math.floor(Math.random() * cardPool.length)] });
 
-      function renderCard(el, card, isFaceDown = false) {
-        if (isFaceDown) {
+      function renderHand(el, owner, card, faceDown = false) {
+        if (faceDown) {
           el.classList.add("face-down");
-          el.innerHTML = '<div class="suit">🂠</div><div class="rank">?</div>';
+          el.innerHTML = `<div class="month">${owner}</div><div class="name">伏せ札</div><div class="kind">?</div>`;
           return;
         }
         el.classList.remove("face-down");
-        el.innerHTML = `<div class="suit">${card.suit}</div><div class="rank">${card.rank}</div>`;
+        el.innerHTML = `<div class="month">${owner} / ${card.month}月</div><div class="name">${card.name}</div><div class="kind">${card.kind} +${card.point}点</div>`;
       }
 
-      function finishMatch() {
-        drawBtn.disabled = true;
-        nextBtn.disabled = true;
+      function renderTable() {
+        tableCardsEl.innerHTML = tableCards.map((c) => `<div class="table-card">${c.month}月<br>${c.name}<br>${c.kind}</div>`).join("");
+      }
+
+      function setupRound() {
+        tableCards = [drawCard(), drawCard(), drawCard(), drawCard()];
+        renderTable();
+        renderHand(playerCardEl, "あなた", { month: "?", name: "?", kind: "-", point: 0 });
+        renderHand(enemyCardEl, "相手", null, true);
+      }
+
+      function scoreTurn(card, actor) {
+        const matched = tableCards.find((c) => c.month === card.month);
+        if (!matched) return { gain: 0, text: `${actor}は ${card.month}月「${card.name}」を出したが場と合わず。` };
+        const gain = card.point + matched.point;
+        tableCards = tableCards.filter((c) => c !== matched);
+        tableCards.push(drawCard());
+        return { gain, text: `${actor}が${card.month}月で一致！ 「${card.name}」と「${matched.name}」で ${gain}点獲得。` };
+      }
+
+      function finishGame() {
+        playBtn.disabled = true;
         if (playerScore > enemyScore) {
-          messageEl.textContent = `あなたの勝利！ ${playerScore} - ${enemyScore} で月夜の王者になった。もう一度遊ぶにはページを再読み込み。`;
-        } else if (enemyScore > playerScore) {
-          messageEl.textContent = `相手の勝利… ${playerScore} - ${enemyScore}。再挑戦するならページを再読み込み！`;
+          messageEl.textContent += ` 最終結果 ${playerScore} - ${enemyScore}。あなたの勝ち！`;
+        } else if (playerScore < enemyScore) {
+          messageEl.textContent += ` 最終結果 ${playerScore} - ${enemyScore}。相手の勝ち…`;
         } else {
-          messageEl.textContent = `引き分け！ ${playerScore} - ${enemyScore}。次は運を味方にしよう。`;
+          messageEl.textContent += ` 最終結果 ${playerScore} - ${enemyScore}。引き分け！`;
         }
       }
 
-      drawBtn.addEventListener("click", () => {
-        if (roundDone) return;
-        const player = randomCard();
-        const enemy = randomCard();
-        renderCard(playerCardEl, player);
-        renderCard(enemyCardEl, enemy);
+      playBtn.addEventListener("click", () => {
+        const playerCard = drawCard();
+        const enemyCard = drawCard();
+        renderHand(playerCardEl, "あなた", playerCard);
+        renderHand(enemyCardEl, "相手", enemyCard);
 
-        if (player.value > enemy.value) {
-          playerScore += 1;
-          messageEl.textContent = `ラウンド${round}: あなたの勝ち！ ${player.rank} が ${enemy.rank} を上回った。`;
-        } else if (player.value < enemy.value) {
-          enemyScore += 1;
-          messageEl.textContent = `ラウンド${round}: 相手の勝ち。${enemy.rank} が強かった…`;
-        } else {
-          messageEl.textContent = `ラウンド${round}: 引き分け！ 同じ ${player.rank}。`;
-        }
+        const playerTurn = scoreTurn(playerCard, "あなた");
+        const enemyTurn = scoreTurn(enemyCard, "相手");
 
+        playerScore += playerTurn.gain;
+        enemyScore += enemyTurn.gain;
         playerScoreEl.textContent = playerScore;
         enemyScoreEl.textContent = enemyScore;
-        roundDone = true;
-        drawBtn.disabled = true;
-        nextBtn.disabled = false;
+        renderTable();
 
-        if (playerScore === 2 || enemyScore === 2 || round === 3) {
-          finishMatch();
-        }
-      });
-
-      nextBtn.addEventListener("click", () => {
-        if (playerScore === 2 || enemyScore === 2 || round === 3) return;
+        messageEl.textContent = `第${round}局: ${playerTurn.text} ${enemyTurn.text}`;
         round += 1;
-        roundDone = false;
-        drawBtn.disabled = false;
-        nextBtn.disabled = true;
-        renderCard(playerCardEl, {} , true);
-        renderCard(enemyCardEl, {}, true);
-        messageEl.textContent = `ラウンド${round}開始！ 「カードを引く」を押してください。`;
+        if (round > 5) finishGame();
       });
+
+      setupRound();
     </script>
   </body>
 </html>
